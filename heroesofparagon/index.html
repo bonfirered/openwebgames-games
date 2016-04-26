@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Heroes of Paragon</title>
+	<link rel="stylesheet" href="Styles/style.css">
+	<link rel="shortcut icon" href="Images/favicon.ico" />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="Scripts/UnityProgress.js"></script>
+  <script src='/assets/js/cpuprofiler.js'></script>
+	<script type="text/javascript">
+		function ResizeCanvas()
+		{
+      /*
+			var w = window.innerWidth;
+			var h = window.innerHeight;
+
+			var minAspectRatio = 4.0 / 3.0;
+			var maxAspectRatio = 16.0 / 9.0;
+			var currAspectRatio = w / h;
+
+			if (currAspectRatio < minAspectRatio) {
+				h = w / minAspectRatio
+			}
+			if (currAspectRatio > maxAspectRatio) {
+				w = h * maxAspectRatio
+			}
+
+			$('.gameView').each(function(i, obj) {
+				obj.width = w;
+				obj.height = h;
+				obj.style.width = "" + w + "px";
+				obj.style.height = "" + h + "px"
+				obj.style.left = "" + ((window.innerWidth - w) * 0.5) + "px";
+				obj.style.top = "" + ((window.innerHeight - h) * 0.5) + "px";
+			});
+      */
+
+      // XXX For test suite purposes, always render to fixed 1366x768 px resolution
+      // instead of scaling the canvas to cover the full screen, like done originally (above)
+      // If the current screen size is too small to contain the 1366x768 px size,
+      // then scale down the presentation, but still keep rendering to 1366x768 px canvas.
+      var w = Math.min(window.innerWidth, 1366);
+      var h = Math.min(window.innerHeight, 768);
+      $('.gameView').each(function(i, obj) {
+        obj.width = 1366;
+        obj.height = 768;
+        obj.style.width = "" + w + "px";
+        obj.style.height = "" + h + "px"
+        obj.style.left = "" + ((window.innerWidth - w) * 0.5) + "px";
+        obj.style.top = "" + ((window.innerHeight - h) * 0.5) + "px";
+      });
+
+		}
+
+		$(function() {
+			ResizeCanvas();
+			$(window).resize(function() {
+					ResizeCanvas();
+				});
+		});
+
+	</script>
+</head>
+<body>
+	<div class="gameView" id="logo"></div>
+	<canvas class="gameView" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+
+	<script type='text/javascript'>
+  // connect to canvas
+  var Module = {
+	  key: 'heroesofparagon',
+    TOTAL_MEMORY: 629145600,
+    filePackagePrefixURL: "Release/",
+    memoryInitializerPrefixURL: "Release/",
+    preRun: (function() { return (location.search.indexOf('cpuprofiler') != -1) ? [cpuprofiler_add_hooks] : []; })(),
+    postRun: [],
+    print: (function() {
+      return function(text) {
+        console.log (text);
+      };
+    })(),
+    printErr: function(text) {
+      console.error (text);
+    },
+    canvas: document.getElementById('canvas'),
+    progress: null,
+    setStatus: function(text) {
+      if (this.progress == null)
+      {
+        if (typeof UnityProgress != 'function')
+          return;
+        this.progress = new UnityProgress (canvas);
+      }
+      if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+      if (text === Module.setStatus.text) return;
+      this.progress.SetMessage (text);
+      var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+      if (m)
+        this.progress.SetProgress (parseInt(m[2])/parseInt(m[4]));
+      if (text === "")
+        this.progress.Clear()
+    },
+    totalDependencies: 0,
+    monitorRunDependencies: function(left) {
+      this.totalDependencies = Math.max(this.totalDependencies, left);
+      Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+    }
+  };
+  Module.setStatus('Downloading (0.0/1)');
+</script>
+<script src="/assets/js/emtimer.js"></script>
+
+<script>
+
+// This is in a temp location. This would be done by the calling iframe.
+var preloadableAssets = [
+  'Release/HoPDemo.data',
+  'Release/HoPDemo.html.mem',
+  'AssetBundles/WebGL/BundlesInfo.json',
+  'AssetBundles/WebGL/Common.unity3d',
+  'AssetBundles/WebGL/UI.unity3d',
+  'AssetBundles/WebGL/BehaviorTrees.unity3d',
+  'AssetBundles/WebGL/ObjectsData.unity3d',
+  'AssetBundles/WebGL/PlayersMaps.unity3d',
+  'AssetBundles/WebGL/PvPProgress.unity3d',
+  'AssetBundles/WebGL/Runes.unity3d',
+  'AssetBundles/WebGL/Tutorial.unity3d',
+  'AssetBundles/WebGL/Music.unity3d',
+  'AssetBundles/WebGL/EnvDefault.unity3d',
+  'AssetBundles/WebGL/Castle.unity3d',
+  'AssetBundles/WebGL/GoldContainer.unity3d',
+  'AssetBundles/WebGL/InfantryCamp.unity3d',
+  'AssetBundles/WebGL/ElixirFactory.unity3d',
+  'AssetBundles/WebGL/GoldFactory.unity3d',
+  'AssetBundles/WebGL/ElixirContainer.unity3d',
+  'AssetBundles/WebGL/Crossbow.unity3d',
+  'AssetBundles/WebGL/MagicSchool.unity3d',
+  'AssetBundles/WebGL/Bunker.unity3d',
+  'AssetBundles/WebGL/Walls_7-8.unity3d',
+  'AssetBundles/WebGL/Walls_6.unity3d',
+  'AssetBundles/WebGL/ArmySchol.unity3d',
+  'AssetBundles/WebGL/RuneLab.unity3d',
+  'AssetBundles/WebGL/Traps.unity3d',
+  'AssetBundles/WebGL/SplashTowerNew.unity3d',
+  'AssetBundles/WebGL/AnimalTrainer.unity3d',
+  'AssetBundles/WebGL/MachineFactory.unity3d',
+  'AssetBundles/WebGL/AntiAir.unity3d',
+  'AssetBundles/WebGL/MachineGun.unity3d',
+  'AssetBundles/WebGL/BigCannon.unity3d',
+  'AssetBundles/WebGL/Props.unity3d',
+  'AssetBundles/WebGL/BatZooka.unity3d',
+  'AssetBundles/WebGL/Dwarf.unity3d',
+  'AssetBundles/WebGL/Warrior_new.unity3d',
+  'AssetBundles/WebGL/Knight_new.unity3d',
+  'AssetBundles/WebGL/DragonRaider.unity3d',
+  'AssetBundles/WebGL/SpecialEffects.unity3d',
+  'AssetBundles/WebGL/Scafold.unity3d'];
+
+for(var i in preloadableAssets) preloadXHR(preloadableAssets[i], 'arraybuffer');
+preloadXHR('Release/HoPDemo.js');
+
+</script>
+
+<script src="inputstream.js"></script>
+<script src="Release/UnityConfig.js"></script>
+<script>
+
+function appendScript(src) {
+  var script = document.createElement('script');
+  script.src = src;
+  document.body.appendChild(script);
+}
+
+// Kicks off the actual page run
+function runPage() {
+  appendScript('Release/fileloader.js');
+
+  if (!(!Math.fround)) {
+    var codeXHR = new XMLHttpRequest();
+    codeXHR.open('GET', 'Release/HoPDemo.js', true);
+    codeXHR.onload = function() {
+      var code = codeXHR.responseText;
+      var blob = new Blob([code], { type: 'text/javascript' });
+      codeXHR = null;
+      var src = URL.createObjectURL(blob);
+      var script = document.createElement('script');
+      script.src = URL.createObjectURL(blob);
+      script.onload = function() {
+        URL.revokeObjectURL(script.src);
+      };
+      document.body.appendChild(script);
+    };
+    codeXHR.send(null);
+
+  } else {
+    var codeXHR = new XMLHttpRequest();
+    codeXHR.open('GET', 'Release/HoPDemo.js', true);
+    codeXHR.onload = function() {
+      var code = codeXHR.responseText;
+      if (!Math.fround) {
+  try {
+    console.log('optimizing out Math.fround calls');
+    var m = /var ([^=]+)=global\.Math\.fround;/.exec(code);
+    var minified = m[1];
+    if (!minified) throw 'fail';
+    var startAsm = code.indexOf('// EMSCRIPTEN_START_FUNCS');
+    var endAsm = code.indexOf('// EMSCRIPTEN_END_FUNCS');
+    var asm = code.substring(startAsm, endAsm);
+    do {
+      var moar = false; // we need to re-do, as x(x( will not be fixed
+      asm = asm.replace(new RegExp('[^a-zA-Z0-9\\$\\_]' + minified + '\\(', 'g'), function(s) { moar = true; return s[0] + '(' });
+    } while (moar);
+    code = code.substring(0, startAsm) + asm + code.substring(endAsm);
+    code = code.replace("'use asm'", "'almost asm'");
+  } catch(e) { console.log('failed to optimize out Math.fround calls ' + e) }
+   }
+
+      var blob = new Blob([code], { type: 'text/javascript' });
+      codeXHR = null;
+      var src = URL.createObjectURL(blob);
+      var script = document.createElement('script');
+      script.src = URL.createObjectURL(blob);
+      script.onload = function() {
+        URL.revokeObjectURL(script.src);
+      };
+      document.body.appendChild(script);
+    };
+    codeXHR.send(null);
+  }
+}
+
+// The page won't start executing the Emscripten/asm.js content until it gets the 'preloadXHRsfinished' message
+// and the preloadedXHRs array has been populated with cached content. Set up a listener to wait until that's done.
+window.addEventListener("message", function(e) { if (e.data == 'preloadXHRsfinished') runPage(); }, false);
+
+</script>
+</body>
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	ga('create', 'UA-71513530-1', 'auto');
+	ga('send', 'pageview');
+
+</script>
+</html>

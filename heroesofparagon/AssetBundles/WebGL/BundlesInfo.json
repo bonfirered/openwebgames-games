@@ -1,0 +1,560 @@
+[
+  {
+    "Name": "Common",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Common.unity3d",
+    "Version": 0,
+    "CRC": 1838271283,
+    "Size": 11476472,
+    "UncompressedSize": 11476472,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "UI",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/UI.unity3d",
+    "Version": 0,
+    "CRC": 2341826664,
+    "Size": 11633665,
+    "UncompressedSize": 11633665,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "AnimalTrainer",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/AnimalTrainer.unity3d",
+    "Version": 0,
+    "CRC": 1095063978,
+    "Size": 618078,
+    "UncompressedSize": 618078,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "AntiAir",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/AntiAir.unity3d",
+    "Version": 0,
+    "CRC": 1395031153,
+    "Size": 690526,
+    "UncompressedSize": 690526,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "ArmySchol",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/ArmySchol.unity3d",
+    "Version": 0,
+    "CRC": 2914388725,
+    "Size": 519510,
+    "UncompressedSize": 519510,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "BatZooka",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/BatZooka.unity3d",
+    "Version": 0,
+    "CRC": 2919182760,
+    "Size": 795758,
+    "UncompressedSize": 795758,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "BehaviorTrees",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/BehaviorTrees.unity3d",
+    "Version": 0,
+    "CRC": 496390889,
+    "Size": 40590,
+    "UncompressedSize": 40590,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "BigCannon",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/BigCannon.unity3d",
+    "Version": 0,
+    "CRC": 506042074,
+    "Size": 1005889,
+    "UncompressedSize": 1005889,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "BipedBoss",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/BipedBoss.unity3d",
+    "Version": 0,
+    "CRC": 1873188768,
+    "Size": 917096,
+    "UncompressedSize": 917096,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "BlackKnightBoss",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/BlackKnightBoss.unity3d",
+    "Version": 0,
+    "CRC": 4267853107,
+    "Size": 1581129,
+    "UncompressedSize": 1581129,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "BlackKnightSolo",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/BlackKnightSolo.unity3d",
+    "Version": 0,
+    "CRC": 1254476566,
+    "Size": 1461676,
+    "UncompressedSize": 1461676,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Bunker",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Bunker.unity3d",
+    "Version": 0,
+    "CRC": 3309045299,
+    "Size": 889405,
+    "UncompressedSize": 889405,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Castle",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Castle.unity3d",
+    "Version": 0,
+    "CRC": 82391166,
+    "Size": 1321949,
+    "UncompressedSize": 1321949,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Catapult",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Catapult.unity3d",
+    "Version": 0,
+    "CRC": 2841247543,
+    "Size": 759931,
+    "UncompressedSize": 759931,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Crossbow",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Crossbow.unity3d",
+    "Version": 0,
+    "CRC": 2425431711,
+    "Size": 688537,
+    "UncompressedSize": 688537,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "DragonRaider",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/DragonRaider.unity3d",
+    "Version": 0,
+    "CRC": 3474469208,
+    "Size": 1876378,
+    "UncompressedSize": 1876378,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Dwarf",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Dwarf.unity3d",
+    "Version": 0,
+    "CRC": 1473164443,
+    "Size": 892028,
+    "UncompressedSize": 892028,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "ElixirContainer",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/ElixirContainer.unity3d",
+    "Version": 0,
+    "CRC": 1187626510,
+    "Size": 855568,
+    "UncompressedSize": 855568,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "ElixirFactory",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/ElixirFactory.unity3d",
+    "Version": 0,
+    "CRC": 2826882795,
+    "Size": 952752,
+    "UncompressedSize": 952752,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "EnvDefault",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/EnvDefault.unity3d",
+    "Version": 0,
+    "CRC": 2742248836,
+    "Size": 2856771,
+    "UncompressedSize": 2856771,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "EnvEvil",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/EnvEvil.unity3d",
+    "Version": 0,
+    "CRC": 1025287447,
+    "Size": 3458929,
+    "UncompressedSize": 3458929,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "EvanBoss",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/EvanBoss.unity3d",
+    "Version": 0,
+    "CRC": 1643484629,
+    "Size": 1585098,
+    "UncompressedSize": 1585098,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "EvilCastle",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/EvilCastle.unity3d",
+    "Version": 0,
+    "CRC": 2265459012,
+    "Size": 1004052,
+    "UncompressedSize": 1004052,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "EvilKing",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/EvilKing.unity3d",
+    "Version": 0,
+    "CRC": 2460101972,
+    "Size": 628204,
+    "UncompressedSize": 628204,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "GoldContainer",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/GoldContainer.unity3d",
+    "Version": 0,
+    "CRC": 1886694845,
+    "Size": 769805,
+    "UncompressedSize": 769805,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "GoldFactory",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/GoldFactory.unity3d",
+    "Version": 0,
+    "CRC": 2260005833,
+    "Size": 970270,
+    "UncompressedSize": 970270,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Healer_new3",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Healer_new3.unity3d",
+    "Version": 0,
+    "CRC": 1982673494,
+    "Size": 1582364,
+    "UncompressedSize": 1582364,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "InfantryCamp",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/InfantryCamp.unity3d",
+    "Version": 0,
+    "CRC": 3002088863,
+    "Size": 973252,
+    "UncompressedSize": 973252,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Jarvas",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Jarvas.unity3d",
+    "Version": 0,
+    "CRC": 3020867618,
+    "Size": 1722729,
+    "UncompressedSize": 1722729,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "KingEvan",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/KingEvan.unity3d",
+    "Version": 0,
+    "CRC": 1713982662,
+    "Size": 470990,
+    "UncompressedSize": 470990,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Knight_new",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Knight_new.unity3d",
+    "Version": 0,
+    "CRC": 2507589930,
+    "Size": 865639,
+    "UncompressedSize": 865639,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "MachineFactory",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/MachineFactory.unity3d",
+    "Version": 0,
+    "CRC": 1263089596,
+    "Size": 615015,
+    "UncompressedSize": 615015,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "MachineGun",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/MachineGun.unity3d",
+    "Version": 0,
+    "CRC": 284923692,
+    "Size": 612122,
+    "UncompressedSize": 612122,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "MagicSchool",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/MagicSchool.unity3d",
+    "Version": 0,
+    "CRC": 2263580940,
+    "Size": 495724,
+    "UncompressedSize": 495724,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Music",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Music.unity3d",
+    "Version": 0,
+    "CRC": 302055448,
+    "Size": 9476631,
+    "UncompressedSize": 9476631,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "ObjectsData",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/ObjectsData.unity3d",
+    "Version": 0,
+    "CRC": 3408055804,
+    "Size": 202201,
+    "UncompressedSize": 202201,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "PlayersMaps",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/PlayersMaps.unity3d",
+    "Version": 0,
+    "CRC": 1667386128,
+    "Size": 36122,
+    "UncompressedSize": 36122,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Portal",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Portal.unity3d",
+    "Version": 0,
+    "CRC": 4034382677,
+    "Size": 782556,
+    "UncompressedSize": 782556,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Props",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Props.unity3d",
+    "Version": 0,
+    "CRC": 171762755,
+    "Size": 2750497,
+    "UncompressedSize": 2750497,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "PvPProgress",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/PvPProgress.unity3d",
+    "Version": 0,
+    "CRC": 1151679321,
+    "Size": 2260,
+    "UncompressedSize": 2260,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "RuneLab",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/RuneLab.unity3d",
+    "Version": 0,
+    "CRC": 3051714460,
+    "Size": 945569,
+    "UncompressedSize": 945569,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Runes",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Runes.unity3d",
+    "Version": 0,
+    "CRC": 4134837814,
+    "Size": 20666,
+    "UncompressedSize": 20666,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Scafold",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Scafold.unity3d",
+    "Version": 0,
+    "CRC": 2912193512,
+    "Size": 297494,
+    "UncompressedSize": 297494,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "SpecialEffects",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/SpecialEffects.unity3d",
+    "Version": 0,
+    "CRC": 807232888,
+    "Size": 2145237,
+    "UncompressedSize": 2145237,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "SplashTowerNew",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/SplashTowerNew.unity3d",
+    "Version": 0,
+    "CRC": 392733929,
+    "Size": 1837500,
+    "UncompressedSize": 1837500,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "SummonersCamp",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/SummonersCamp.unity3d",
+    "Version": 0,
+    "CRC": 1097432941,
+    "Size": 644282,
+    "UncompressedSize": 644282,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Tank_new",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Tank_new.unity3d",
+    "Version": 0,
+    "CRC": 3361111022,
+    "Size": 921232,
+    "UncompressedSize": 921232,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Traps",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Traps.unity3d",
+    "Version": 0,
+    "CRC": 3429344432,
+    "Size": 1040978,
+    "UncompressedSize": 1040978,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Tutorial",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Tutorial.unity3d",
+    "Version": 0,
+    "CRC": 3062249700,
+    "Size": 5918,
+    "UncompressedSize": 5918,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "TutorialGirl",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/TutorialGirl.unity3d",
+    "Version": 0,
+    "CRC": 3575789392,
+    "Size": 7899,
+    "UncompressedSize": 7899,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Walker",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Walker.unity3d",
+    "Version": 0,
+    "CRC": 2139945139,
+    "Size": 796492,
+    "UncompressedSize": 796492,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Walls_1",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Walls_1.unity3d",
+    "Version": 0,
+    "CRC": 365576482,
+    "Size": 214351,
+    "UncompressedSize": 214351,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Walls_2-3",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Walls_2-3.unity3d",
+    "Version": 0,
+    "CRC": 4237680171,
+    "Size": 215230,
+    "UncompressedSize": 215230,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Walls_4",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Walls_4.unity3d",
+    "Version": 0,
+    "CRC": 3772392935,
+    "Size": 235610,
+    "UncompressedSize": 235610,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Walls_5",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Walls_5.unity3d",
+    "Version": 0,
+    "CRC": 2394853583,
+    "Size": 218763,
+    "UncompressedSize": 218763,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Walls_6",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Walls_6.unity3d",
+    "Version": 0,
+    "CRC": 2207956406,
+    "Size": 177307,
+    "UncompressedSize": 177307,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Walls_7-8",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Walls_7-8.unity3d",
+    "Version": 0,
+    "CRC": 1355909841,
+    "Size": 215032,
+    "UncompressedSize": 215032,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Walls_9-10",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Walls_9-10.unity3d",
+    "Version": 0,
+    "CRC": 4217991627,
+    "Size": 237335,
+    "UncompressedSize": 237335,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Warrior_new",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Warrior_new.unity3d",
+    "Version": 0,
+    "CRC": 3890663319,
+    "Size": 769068,
+    "UncompressedSize": 769068,
+    "IsTutorialBundle": true
+  },
+  {
+    "Name": "Wizard",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Wizard.unity3d",
+    "Version": 0,
+    "CRC": 978991143,
+    "Size": 1491751,
+    "UncompressedSize": 1491751,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Worker",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Worker.unity3d",
+    "Version": 0,
+    "CRC": 4170821255,
+    "Size": 363345,
+    "UncompressedSize": 363345,
+    "IsTutorialBundle": false
+  },
+  {
+    "Name": "Worm",
+    "Url": "https://s3.amazonaws.com/owg/heroesofparagon/AssetBundles/WebGL/Worm.unity3d",
+    "Version": 0,
+    "CRC": 1847839118,
+    "Size": 1230793,
+    "UncompressedSize": 1230793,
+    "IsTutorialBundle": false
+  }
+]
