@@ -1,0 +1,22 @@
+{
+  "name": "openwebgames-games",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tobius/openwebgames-games.git"
+  },
+  "author": "",
+  "license": "NONE",
+  "bugs": {
+    "url": "https://github.com/tobius/openwebgames-games/issues"
+  },
+  "homepage": "https://github.com/tobius/openwebgames-games#readme",
+  "devDependencies": {
+    "express": "^4.13.4"
+  }
+}
