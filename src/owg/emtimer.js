@@ -92,11 +92,18 @@ function unloadAllEventHandlers() {
   XMLHttpRequest = realXMLHttpRequest;
   performance.now = performance.realNow;
   Date.now = Date.realNow;
-  EventTarget.prototype.addEventListener = realAddEventListener;
+  try { // Suppress exceptions thrown on nonsupporting browsers.
+    EventTarget.prototype.addEventListener = realAddEventListener;
+  } catch(e) {}
 }
 
 // Mock performance.now() and Date.now() to be deterministic.
-performance.realNow = performance.now;
+var realPerformance = window.performance;
+window.performance = {
+  realNow: function() { return realPerformance.now(); },
+  now: function() { return realPerformance.now(); }
+};
+// A simple replace would be 'performance.realNow = performance.now;', but that doesn't work on Safari. Need the above instead.
 Date.realNow = Date.now;
 if (injectingInputStream || recordingInputStream) {
   if (!Module['dontOverrideTime']) {
@@ -607,16 +614,29 @@ if (injectingInputStream) {
     'devicemotion', 'deviceorientation',
     'mousewheel', 'wheel', 'WheelEvent', 'DOMMouseScroll',
     'blur', 'focus', 'beforeunload', 'unload', 'resize', 'error'];
-  var realAddEventListener = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function(type, listener, useCapture) {
-    if (overriddenMessageTypes.indexOf(type) != -1) {
-      // if e.isTrusted is true, then the input comes from human interaction, if false, then it was programmatically generated.
-      var filteredEventListener = function(e) { try { if (!e.isTrusted) listener(e); } catch(e) {} };
-      realAddEventListener.call(this, type, filteredEventListener, useCapture);
-      registeredEventListeners.push([this, type, filteredEventListener, useCapture]);
-    } else {
-      realAddEventListener.call(this, type, listener, useCapture);
-      registeredEventListeners.push([this, type, listener, useCapture]);
+
+  // If this_ is specified, addEventListener is called using that as the 'this' object. Otherwise the current this is used.
+  function replaceEventListener(obj, this_) {
+    var realAddEventListener = obj.addEventListener;
+    obj.addEventListener = function(type, listener, useCapture) {
+      if (!this_) this_ = this;
+      if (overriddenMessageTypes.indexOf(type) != -1) {
+        // if e.isTrusted is true, then the input comes from human interaction, if false, then it was programmatically generated.
+        var filteredEventListener = function(e) { try { if (!e.isTrusted) listener(e); } catch(e) {} };
+        realAddEventListener.call(this_, type, filteredEventListener, useCapture);
+        registeredEventListeners.push([this_, type, filteredEventListener, useCapture]);
+      } else {
+        realAddEventListener.call(this_, type, listener, useCapture);
+        registeredEventListeners.push([this_, type, listener, useCapture]);
+      }
+    }
+  }
+  if (typeof EventTarget !== 'undefined') {
+    replaceEventListener(EventTarget.prototype, null);
+  } else {
+    var eventListenerObjectsToReplace = [window, Module['canvas']];
+    for(var i = 0; i < eventListenerObjectsToReplace.length; ++i) {
+      replaceEventListener(eventListenerObjectsToReplace[i], eventListenerObjectsToReplace[i]);
     }
   }
 }
