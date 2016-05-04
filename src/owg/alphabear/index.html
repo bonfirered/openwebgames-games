@@ -30,17 +30,23 @@
     <script type="text/javascript" src="TemplateData/UnityProgress.js"></script>
 	
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" height="768" width="1366"></canvas>
-    <script src='../cpuprofiler.js'></script>
+    <script src="../cpuprofiler.js"></script>
     <script type='text/javascript'>
   var Module = {
+    key: 'alphabear',
+    providesRafIntegration: true, // If true, this demo provides requestAnimationFrame() integration for emunittest built-in. Generally this needs to be false, unless the app was specially built with emunittest support enabled.
+    usesEmscriptenHTML5InputAPI: true, // Set this to true for demos that utilize the Emscripten html5.h input API. Defaults to false.
+    injectXMLHttpRequests: true, // If true, the harness should intercept all XHRs to provide transparent caching of assets and a progress bar.
+    xhrFilter: function(url) { return url.indexOf('spryfox') != -1 || url.indexOf('HWStats') != -1; },
+
     TOTAL_MEMORY: 188743680,
 //    preRun: (function() { return (location.search.indexOf('cpuprofiler') != -1) ? [cpuprofiler_add_hooks] : []; })(),
     preRun: (function() { return (location.search.indexOf('cpuprofiler') != -1) ? [cpuprofiler_add_hooks] : []; })(),
     errorhandler: null,			// arguments: err, url, line. This function must return 'true' if the error is handled, otherwise 'false'
     compatibilitycheck: null,
-    dataUrl: "Release/openweb-gdc-rc2.data",
-    codeUrl: "Release/openweb-gdc-rc2.js",
-    memUrl: "Release/openweb-gdc-rc2.mem",
+    dataUrl: "Release/openweb-gdc-rc2.datagz",
+    codeUrl: "Release/openweb-gdc-rc2.jsgz",
+    memUrl: "Release/openweb-gdc-rc2.memgz",
     canvas: document.getElementById('canvas'),
   };
 </script>
