@@ -77,6 +77,8 @@ var numStutterEvents = 0;
 
 var registeredEventListeners = [];
 
+var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
 function unloadAllEventHandlers() {
   for(var i in registeredEventListeners) {
     var l = registeredEventListeners[i];
@@ -90,7 +92,8 @@ function unloadAllEventHandlers() {
 
   // Also restore all other overrides (in case they might pin down the page to not be able to GC?)
   XMLHttpRequest = realXMLHttpRequest;
-  performance.now = performance.realNow;
+  if (isSafari) performance = realPerformance;
+  else performance.now = performance.realNow;
   Date.now = Date.realNow;
   try { // Suppress exceptions thrown on nonsupporting browsers.
     EventTarget.prototype.addEventListener = realAddEventListener;
@@ -98,12 +101,17 @@ function unloadAllEventHandlers() {
 }
 
 // Mock performance.now() and Date.now() to be deterministic.
-var realPerformance = window.performance;
-window.performance = {
-  realNow: function() { return realPerformance.now(); },
-  now: function() { return realPerformance.now(); }
-};
-// A simple replace would be 'performance.realNow = performance.now;', but that doesn't work on Safari. Need the above instead.
+// Unfortunately looks like there does not exist a good feature test for this, so resort to user agent sniffing.. (sad :/)
+if (isSafari) {
+  realPerformance = performance;
+  performance = {
+    realNow: function() { return realPerformance.now(); },
+    now: function() { return realPerformance.now(); }
+  };
+} else {
+  performance.realNow = performance.now;
+}
+
 Date.realNow = Date.now;
 if (injectingInputStream || recordingInputStream) {
   if (!Module['dontOverrideTime']) {
