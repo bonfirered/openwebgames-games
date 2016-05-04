@@ -77,8 +77,6 @@ var numStutterEvents = 0;
 
 var registeredEventListeners = [];
 
-var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
 function unloadAllEventHandlers() {
   for(var i in registeredEventListeners) {
     var l = registeredEventListeners[i];
@@ -89,12 +87,8 @@ function unloadAllEventHandlers() {
   // Make sure no XHRs are being held on to either.
   preloadedXHRs = {};
   numXHRsStillInFlight = 0;
-
-  // Also restore all other overrides (in case they might pin down the page to not be able to GC?)
   XMLHttpRequest = realXMLHttpRequest;
-  if (isSafari) performance = realPerformance;
-  else performance.now = performance.realNow;
-  Date.now = Date.realNow;
+
   try { // Suppress exceptions thrown on nonsupporting browsers.
     EventTarget.prototype.addEventListener = realAddEventListener;
   } catch(e) {}
@@ -102,6 +96,7 @@ function unloadAllEventHandlers() {
 
 // Mock performance.now() and Date.now() to be deterministic.
 // Unfortunately looks like there does not exist a good feature test for this, so resort to user agent sniffing.. (sad :/)
+var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 if (isSafari) {
   realPerformance = performance;
   performance = {
