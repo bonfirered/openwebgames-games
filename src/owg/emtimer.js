@@ -488,7 +488,7 @@ function doReferenceTest() {
 
       wrong = Math.floor(total / (img.width*img.height*3)); // floor, to allow some margin of error for antialiasing
 
-      if (wrong < 10) { // Allow a bit of leeway.
+      if (wrong < 1000) { // Allow a bit of leeway.
         testResult = 'PASS';
         div.innerHTML = 'TEST PASSED. Timescore: ' + duration.toFixed(2) + '. (lower is better)';
         div.style.color = 'green';
