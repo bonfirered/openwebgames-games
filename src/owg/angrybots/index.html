@@ -10,9 +10,9 @@
 	</head>
 	<body class="template">
 		<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" height="600px" width="938px"></canvas>
-		<script src="/assets/js/cpuprofiler.js"></script>
+		<script src="../cpuprofiler.js"></script>
 		<script src="config.js"></script>
-		<script src="/assets/js/emtimer.js"></script>
+		<script src="../emtimer.js"></script>
 		<script src="inputstream.js"></script>
 		<script src="Release/UnityConfig.js"></script>
 		<script src="Release/fileloader.js"></script>
@@ -21,7 +21,7 @@
 		// angrybots game
 		(function(){
 			var key = 'angrybots';
-			top.startGame(key);
+			if (top.startGame) top.startGame(key);
 
 			// @todo: call when done running game test
 			//top.stopGame(key, results);

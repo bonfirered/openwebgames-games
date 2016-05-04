@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Ski Safari</title>
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <script src="TemplateData/spin.min.js"></script>
+    <script src="TemplateData/UnityProgress.js"></script>
+    <script src="TemplateData/jquery-1.12.1.min.js"></script>
+    <script src="TemplateData/letterbox.js"></script>
+
+  </head>
+  <body class="template">
+    <p class="header"><span>Ski Safari</span></p>
+    <div class="template-wrap">
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    </div>
+
+    <script src='../cpuprofiler.js'></script>
+    <script type='text/javascript'>
+  var Module = {
+    key: 'skisafari',
+    // emtimer.js configuration:
+    providesRafIntegration: true, // If true, this demo provides requestAnimationFrame() integration for emunittest built-in. Generally     
+    usesEmscriptenHTML5InputAPI: true, // Set this to true for demos that utilize the Emscripten html5.h input API. Defaults to false.
+    injectXMLHttpRequests: true, // If true, the harness should intercept all XHRs to provide transparent caching of assets and a progress     
+    TOTAL_MEMORY: 268435456,
+    errorhandler: null,			// arguments: err, url, line. This function must return 'true' if the error is handled, otherwise 'false'
+    compatibilitycheck: null,
+    dataUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.datagz",
+    codeUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.jsgz",
+    memUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.memgz",
+    canvas: document.getElementById('canvas')
+  };
+</script>
+
+<script src="../emtimer.js"></script>
+<script src="inputstream.js"></script>
+<script src="Release/UnityLoader.js"></script>
+
+
+    <script src="TemplateData/slWebBridge.js"></script>
+  </body>
+</html>

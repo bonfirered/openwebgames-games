@@ -1,0 +1,112 @@
+body {
+    overflow: initial;
+}
+
+.hidden {
+    display: none;
+}
+
+#overlay {
+    position: fixed;
+    width: 100%;
+    top: 100%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.btn {
+    display: block;
+    color: white;
+    cursor: pointer;
+}
+
+.btn > img {
+    opacity: 0.75;
+}
+
+.btn:hover > img {
+    opacity: 0.85;
+}
+
+.btn.enabled > img {
+    opacity: 1;
+}
+
+.btn.enabled > .off {
+    display: none;
+}
+
+div[class="btn"] > .on {
+    display: none;
+}
+
+#btn-camera {
+    position: absolute;
+    top: 15px;
+    right: 10px;
+}
+
+#btn-camera img {
+    width: 120px;
+    display: none;
+}
+
+#btn-info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: none;
+}
+
+#btn-info img {
+    width: 90px;
+}
+
+#info {
+    position: absolute;
+    width: calc(100% - 60px);
+    left: 0;
+    top: 100px;
+    
+    color: white;
+    padding: 20px 30px;
+    background-color: #82354f;
+    line-height: 2;
+    font-family: 'Lucida Grande';
+    font-size: 14px;
+    z-index: 10;
+}
+
+.share {
+    margin-top: 30px;    
+}
+
+.share img {
+    margin-right: 20px;
+    width: 44px;
+}
+
+#powered {
+    display: none;
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    margin-left: -100px;
+}
+
+#powered img {
+    width: 200px;
+    opacity: 0.75;
+}
+
+@media (min-width: 720px) { 
+    #info {
+        padding: 40px 60px;
+        width: 600px;
+        left: 50%;
+        margin-left: -360px;
+        top: 20%;
+    }
+}

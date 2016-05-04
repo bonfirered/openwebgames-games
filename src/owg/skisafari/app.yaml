@@ -1,0 +1,42 @@
+application: skisafari-webgl
+version: 1
+runtime: php55
+api_version: 1
+
+default_expiration: "1m"
+
+handlers:
+
+# FB Products Info folder
+- url: /Products
+  static_dir: Products
+
+# FB Achievements Info folder
+- url: /Achievements
+  static_dir: Achievements
+
+# Unity Release folder
+- url: /Release
+  static_dir: Release
+
+# Unity TemplateData folder
+- url: /TemplateData
+  static_dir: TemplateData
+
+# Payments callback
+- url: /callback.php
+  script: callback.php
+
+# Send everything else in root directory to index.html
+- url: /(.+)/
+  static_files: \1/index.html
+  upload: (.+)/index.html
+
+- url: /(.+)
+  static_files: \1/index.html
+  upload: (.+)/index.html
+
+# site root
+- url: /
+  static_files: index.html
+  upload: index.html

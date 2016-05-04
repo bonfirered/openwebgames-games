@@ -12,22 +12,24 @@ function UnityProgress (dom) {
 	// background.style.position = "absolute";
 	// parent.append(background);
 	// this.background = background;
-	//
+	// 
 	// var logoImage = document.createElement("img");
-	// logoImage.src = "../Images/progresslogo.png";
+	// logoImage.src = "../Images/progresslogo.png"; 
 	// logoImage.style.position = "absolute";
 	// parent.append(logoImage);
 	// this.logoImage = logoImage;
-
+	
 	var progressFrame = document.createElement("img");
-	progressFrame.src = "https://s3.amazonaws.com/owg/heroesofparagon/Images/progress_bg.png";
+	progressFrame.src = "Images/progress_bg.png";
 	progressFrame.style.position = "absolute";
+	progressFrame.style.display = 'none'; /// xxx test harness
 	$(parent).append(progressFrame);
 	this.progressFrame = progressFrame;
 
 	var progressBar = document.createElement("img");
-	progressBar.src = "https://s3.amazonaws.com/owg/heroesofparagon/Images/progress.png";
+	progressBar.src = "Images/progress.png";
 	progressBar.style.position = "absolute";
+	progressBar.style.display = 'none'; /// xxx test harness
 	$(parent).append(progressBar);
 	this.progressBar = progressBar;
 
@@ -37,21 +39,21 @@ function UnityProgress (dom) {
 	this.messageArea = messageArea;
 
 
-	this.SetProgress = function (progress) {
+	this.SetProgress = function (progress) { 
 		if (this.progress < progress)
-			this.progress = progress;
+			this.progress = progress; 
 		this.messageArea.style.display = "none";
-		this.progressFrame.style.display = "inline";
-		this.progressBar.style.display = "inline";
+		this.progressFrame.style.display = "none";// "inline";
+		this.progressBar.style.display = "none";// "inline";			
 		this.Update();
 	}
 
-	this.SetMessage = function (message) {
-		this.message = message;
+	this.SetMessage = function (message) { 
+		this.message = message; 
 		//this.background.style.display = "inline";
 		//this.logoImage.style.display = "inline";
 		this.progressFrame.style.display = "none";
-		this.progressBar.style.display = "none";
+		this.progressBar.style.display = "none";			
 		this.Update();
 	}
 
