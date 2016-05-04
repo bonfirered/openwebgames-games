@@ -33,7 +33,6 @@ window.onerror = function(msg, url, line, column, e) {
   unloadAllEventHandlers();
   if (window.opener) {
     window.opener.postMessage(testResults, "*");
-    window.onbeforeunload = null; // Don't call any application onbeforeunload handlers as a response to window.close() below.
     window.close();
   }
 }
@@ -77,6 +76,15 @@ var numStutterEvents = 0;
 
 var registeredEventListeners = [];
 
+// Don't call any application page unload handlers as a response to window being closed.
+function ensureNoClientHandlers() {
+  // This is a bit tricky to manage, since the page could register these handlers at any point,
+  // so keep watching for them and remove them if any are added. This function is called multiple times
+  // in a semi-polling fashion to ensure these are not overridden.
+  if (window.onbeforeunload) window.onbeforeunload = null;
+  if (window.onunload) window.onunload = null;
+}
+
 function unloadAllEventHandlers() {
   for(var i in registeredEventListeners) {
     var l = registeredEventListeners[i];
@@ -88,6 +96,8 @@ function unloadAllEventHandlers() {
   preloadedXHRs = {};
   numXHRsStillInFlight = 0;
   XMLHttpRequest = realXMLHttpRequest;
+
+  ensureNoClientHandlers();
 
   try { // Suppress exceptions thrown on nonsupporting browsers.
     EventTarget.prototype.addEventListener = realAddEventListener;
@@ -554,6 +564,7 @@ function simulateMouseEvent(eventType, x, y, button) {
                    eventType == 'mousemove' ? 0 : 1, x, y, x, y,
                    0, 0, 0, 0,
                    button, null);
+  e.programmatic = true;
 
   // Dispatch to Emscripten's html5.h API:
   if (Module['usesEmscriptenHTML5InputAPI'] && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0) {
@@ -585,6 +596,7 @@ function simulateKeyEvent(eventType, keyCode, charCode) {
   e.keyCode = keyCode;
   e.which = keyCode;
   e.charCode = charCode;
+  e.programmatic = true;
   //  }
 
   // Dispatch directly to Emscripten's html5.h API:
@@ -622,10 +634,10 @@ if (injectingInputStream) {
   function replaceEventListener(obj, this_) {
     var realAddEventListener = obj.addEventListener;
     obj.addEventListener = function(type, listener, useCapture) {
+      ensureNoClientHandlers();
       if (!this_) this_ = this;
       if (overriddenMessageTypes.indexOf(type) != -1) {
-        // if e.isTrusted is true, then the input comes from human interaction, if false, then it was programmatically generated.
-        var filteredEventListener = function(e) { try { if (!e.isTrusted) listener(e); } catch(e) {} };
+        var filteredEventListener = function(e) { try { console.error('event ' + type + ', trusted: ' + e.isTrusted); if (e.programmatic) listener(e); } catch(e) {} };
         realAddEventListener.call(this_, type, filteredEventListener, useCapture);
         registeredEventListeners.push([this_, type, filteredEventListener, useCapture]);
       } else {
@@ -637,7 +649,7 @@ if (injectingInputStream) {
   if (typeof EventTarget !== 'undefined') {
     replaceEventListener(EventTarget.prototype, null);
   } else {
-    var eventListenerObjectsToReplace = [window, Module['canvas']];
+    var eventListenerObjectsToReplace = [window, document, document.body, Module['canvas']];
     for(var i = 0; i < eventListenerObjectsToReplace.length; ++i) {
       replaceEventListener(eventListenerObjectsToReplace[i], eventListenerObjectsToReplace[i]);
     }
@@ -724,6 +736,8 @@ function referenceTestTick() {
     return; // We are being called recursively, so ignore this call.
 
   if (!runtimeInitialized) return;
+
+  ensureNoClientHandlers();
 
   var t1 = performance.realNow();
   accumulatedCpuTime += t1 - referenceTestT0;
