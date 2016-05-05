@@ -341,7 +341,7 @@ if (Module['injectXMLHttpRequests']) {
           if (preloadedXHRs[xhrKey]) this_.xhr_ = preloadedXHRs[xhrKey];
         }
       }
-        
+
       if (this.xhr_) {
         // This particular XHR URL has been downloaded up front. Serve the preloaded one.
         setTimeout(function() {
@@ -429,7 +429,7 @@ function loadReferenceImage() {
   img.src = 'reference.png';
   // reference.png might come from a different domain than the canvas, so don't let it taint ctx.getImageData().
   // See https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image
-  img.crossOrigin = 'Anonymous'; 
+  img.crossOrigin = 'Anonymous';
   img.onload = function() {
     var canvas = document.createElement('canvas');
     canvas.width = img.width;
@@ -464,14 +464,14 @@ function doReferenceTest() {
     try {
       var img = Module['referenceImage'];
       var div = document.createElement('div');
-      
+
       var actualCanvas = document.createElement('canvas');
       actualCanvas.width = actualImage.width;
       actualCanvas.height = actualImage.height;
       var actualCtx = actualCanvas.getContext('2d');
       actualCtx.drawImage(actualImage, 0, 0);
       var actual = actualCtx.getImageData(0, 0, actualImage.width, actualImage.height).data;
-      
+
       var total = 0;
       var width = img.width;
       var height = img.height;
@@ -609,7 +609,7 @@ function simulateKeyEvent(eventType, keyCode, charCode) {
     }
   } else {
     // Dispatch to browser for real
-    Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e); 
+    Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e);
   }
 }
 
@@ -637,7 +637,7 @@ if (injectingInputStream) {
       ensureNoClientHandlers();
       if (!this_) this_ = this;
       if (overriddenMessageTypes.indexOf(type) != -1) {
-        var filteredEventListener = function(e) { try { console.error('event ' + type + ', trusted: ' + e.isTrusted); if (e.programmatic) listener(e); } catch(e) {} };
+        var filteredEventListener = function(e) { try { if (e.programmatic) listener(e); } catch(e) { console.error('event ' + type + ', trusted: ' + e.isTrusted); } };
         realAddEventListener.call(this_, type, filteredEventListener, useCapture);
         registeredEventListeners.push([this_, type, filteredEventListener, useCapture]);
       } else {
@@ -669,7 +669,7 @@ Module['referenceTestPreTick'] = referenceTestPreTick;
 // Captures the whole input stream as a JavaScript formatted code.
 var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
 
-function dumpRecordedInputStream() {  
+function dumpRecordedInputStream() {
   recordedInputStream += '}<br>';
 
   var div = document.createElement('div');
