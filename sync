@@ -1,0 +1,106 @@
+#!/usr/bin/env node
+
+/**
+ * synchronize openwebgames-games files with amazon bucket
+ */
+
+// shell access
+var exec = require('child_process').exec;
+
+// utility lib
+var _ = require('underscore');
+
+// async lib
+var async = require('async');
+
+// read files/folders recursively
+var recursive = require('recursive-readdir');
+
+// define base dir
+var base = 'src/owg';
+
+// define target bucket
+var bucket = 'owg-dev';
+
+// specify valid extensions
+var validExtensions = [
+	'3gp', 'babylon', 'css', 'data', 'datagz', 'dds', 'gif', 'html',
+	'ico', 'jpg', 'js', 'jsgz', 'json', 'gz', 'm4a', 'mem', 'memgz',
+	'ogg', 'png', 'symbolsgz', 'ttf', 'txt', 'unity3d', 'woff',
+	'woff2', 'yaml'
+];
+
+// build regexp to test valid extensions
+var re = new RegExp('\.(' + validExtensions.join('|') + ')$');
+
+// prepare for file key groupings
+var keys = {
+	gzipJs		: [],
+	gzipData	: [],
+	other		: []
+};
+
+// commands to execute
+var cmds = [];
+
+/**
+ * outputs command line execution results
+ *
+ * @param {String} err
+ * @param {String} stdout
+ * @param {String} stderr
+ */
+function puts(err, stdout, stderr){
+	if (!!err){
+		return console.error(err);
+	}
+	console.log(stdout);
+}
+
+// find every file
+recursive(base, function(err, files){
+
+	// separate valid push files
+	_.each(files, function(file){
+		var key = file.split(base + '/')[1];
+		if (re.test(key)){
+			if (/js\.*gz$/.test(key)){
+				keys.gzipJs.push(key);
+			} else if (/(data|mem|symbols)\.*gz$/.test(key)){
+				keys.gzipData.push(key);
+			} else {
+				keys.other.push(key);
+			}
+		}
+	});
+
+	// create initial sync command
+	cmds.push('aws s3 sync . s3://' + bucket);
+
+	// create push command for each compressed js file
+	_.each(keys.gzipJs, function(key){
+		cmds.push('aws s3api put-object --content-encoding "gzip" --content-type "application/x-javascript" --bucket ' + bucket + ' --key ' + key + ' --body ' + key);
+	});
+
+	// create push command for each compressed data file
+	_.each(keys.gzipData, function(key){
+		cmds.push('aws s3api put-object --content-encoding "gzip" --content-type "application/octet-stream" --bucket ' + bucket + ' --key ' + key + ' --body ' + key);
+	});
+
+	// run all commands
+	var count = 0;
+	async.eachSeries(cmds, function(cmd, cb){
+		exec('cd ' + base + ' && ' + cmd, function(err, stdout, stderr){
+			count++;
+			if (!!err){
+				return cb([cmd, err]);
+			}
+			console.log(count + ' of ' + cmds.length, cmd, stdout);
+			cb();
+		});
+	}, function(err){
+		console.error(err);
+	});
+
+});
+
