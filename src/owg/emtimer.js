@@ -209,6 +209,10 @@ function cacheRemotePackage(db, packageName, packageData, callback, errback) {
     errback('cacheRemotePackage: IndexedDB not available!');
     return;
   }
+  if (location.protocol.indexOf('file') != -1) {
+    errback('Loading via file://, skipping caching to IndexedDB');
+    return;
+  }
   try {
     var transaction = db.transaction(['FILES'], 'readwrite');
     var packages = transaction.objectStore('FILES');
@@ -627,21 +631,24 @@ if (injectingInputStream) {
     'pointerlockchange', 'pointerlockerror', 'webkitpointerlockchange', 'webkitpointerlockerror', 'mozpointerlockchange', 'mozpointerlockerror', 'mspointerlockchange', 'mspointerlockerror', 'opointerlockchange', 'opointerlockerror',
     'devicemotion', 'deviceorientation',
     'mousewheel', 'wheel', 'WheelEvent', 'DOMMouseScroll',
-    'blur', 'focus', 'beforeunload', 'unload', 'resize', 'error'];
+    'blur', 'focus', 'beforeunload', 'unload', 'error'];
+
+  // Some game demos programmatically fire the resize event. For Firefox and Chrome, we detect this via event.isTrusted and know to correctly pass it through, but to make Safari happy,
+  // it's just easier to let resize come through for those demos that need it.
+  if (!Module['pageNeedsResizeEvent']) overriddenMessageTypes.push('resize');
 
   // If this_ is specified, addEventListener is called using that as the 'this' object. Otherwise the current this is used.
   function replaceEventListener(obj, this_) {
     var realAddEventListener = obj.addEventListener;
     obj.addEventListener = function(type, listener, useCapture) {
       ensureNoClientHandlers();
-      if (!this_) this_ = this;
       if (overriddenMessageTypes.indexOf(type) != -1) {
-        var filteredEventListener = function(e) { try { if (e.programmatic) listener(e); } catch(e) {} };
-        realAddEventListener.call(this_, type, filteredEventListener, useCapture);
-        registeredEventListeners.push([this_, type, filteredEventListener, useCapture]);
+        var filteredEventListener = function(e) { try { if (e.programmatic || !e.isTrusted) listener(e); } catch(e) {} };
+        realAddEventListener.call(this_ || this, type, filteredEventListener, useCapture);
+        registeredEventListeners.push([this_ || this, type, filteredEventListener, useCapture]);
       } else {
-        realAddEventListener.call(this_, type, listener, useCapture);
-        registeredEventListeners.push([this_, type, listener, useCapture]);
+        realAddEventListener.call(this_ || this, type, listener, useCapture);
+        registeredEventListeners.push([this_ || this, type, listener, useCapture]);
       }
     }
   }
