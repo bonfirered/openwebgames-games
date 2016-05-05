@@ -168,8 +168,6 @@ function totalProgress() {
 // Use IndexedDB for caching, and kill IndexedDB from the site in question so that it doesn't persist savegame/progress data
 // which might make subsequent runs different.
 var realIndexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-// Looks like the following does not quite have any effect.
-// window.indexedDB = window.mozIndexedDB = window.webkitIndexedDB = window.msIndexedDB = undefined;
 
 function openDatabase(dbname, dbversion, callback, errback) {
   try { var openRequest = realIndexedDB.open(dbname, dbversion);
@@ -192,7 +190,7 @@ function fetchCachedPackage(db, packageName, callback, errback) {
   try {
     var transaction = db.transaction(['FILES'], 'readonly');
     var packages = transaction.objectStore('FILES');
-    var getRequest = packages.get("file/" + packageName);
+    var getRequest = packages.get("file/" + Module.key + '/' + packageName);
     getRequest.onsuccess = function(event) {
       if (event.target.result) {
         var len = event.target.result.byteLength || event.target.result.length;
@@ -211,10 +209,14 @@ function cacheRemotePackage(db, packageName, packageData, callback, errback) {
     errback('cacheRemotePackage: IndexedDB not available!');
     return;
   }
+  if (location.protocol.indexOf('file') != -1) {
+    errback('Loading via file://, skipping caching to IndexedDB');
+    return;
+  }
   try {
     var transaction = db.transaction(['FILES'], 'readwrite');
     var packages = transaction.objectStore('FILES');
-    var putRequest = packages.put(packageData, "file/" + packageName);
+    var putRequest = packages.put(packageData, "file/" + Module.key + '/' + packageName);
     putRequest.onsuccess = function(event) {
       console.log('Stored file ' + packageName + ' to IndexedDB cache.');
       callback(packageName);
@@ -250,7 +252,7 @@ function idbError(e) {
 }
 
 if (Module['injectXMLHttpRequests']) {
-  openDatabase('xhrCache_' + Module.key, Module.xhrCacheVersion || 1, idbOpened, idbError);
+  openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbOpened, idbError);
 }
 
 function withIndexedDb(func) {
@@ -258,13 +260,14 @@ function withIndexedDb(func) {
   else idbOpenListeners.push(func);
 }
 
-function clearIndexedDBCache(dbName) {
+// dbName: The IndexedDB database name to delete. Default: 'xhrCache'
+function clearIndexedDBCache(dbName, onsuccess, onerror, onblocked) {
   if (dbInstance) dbInstance.close();
-  if (!dbName) dbName = 'xhrCache_' + Module.key;
+  if (!dbName) dbName = 'xhrCache';
   var req = realIndexedDB.deleteDatabase(dbName);
-  req.onsuccess = function() { console.log('Deleted IndexedDB cache ' + dbName + '!'); }
-  req.onerror = function() { console.error('Failed to delete IndexedDB cache ' + dbName + '!'); }
-  req.onblocked = function() { console.error('Failed to delete IndexedDB cache ' + dbName + ', DB was blocked!'); }
+  req.onsuccess = function() { console.log('Deleted IndexedDB cache ' + dbName + '!'); if (onsuccess) onsuccess(); }
+  req.onerror = function() { console.error('Failed to delete IndexedDB cache ' + dbName + '!'); if (onerror) onerror(); }
+  req.onblocked = function() { console.error('Failed to delete IndexedDB cache ' + dbName + ', DB was blocked!'); if (onblocked) onblocked(); }
 }
 
 // E.g. use the following function to load one by one (or do it somewhere else and set preloadedXHRs object)
@@ -341,7 +344,7 @@ if (Module['injectXMLHttpRequests']) {
           if (preloadedXHRs[xhrKey]) this_.xhr_ = preloadedXHRs[xhrKey];
         }
       }
-
+        
       if (this.xhr_) {
         // This particular XHR URL has been downloaded up front. Serve the preloaded one.
         setTimeout(function() {
@@ -429,7 +432,7 @@ function loadReferenceImage() {
   img.src = 'reference.png';
   // reference.png might come from a different domain than the canvas, so don't let it taint ctx.getImageData().
   // See https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image
-  img.crossOrigin = 'Anonymous';
+  img.crossOrigin = 'Anonymous'; 
   img.onload = function() {
     var canvas = document.createElement('canvas');
     canvas.width = img.width;
@@ -464,14 +467,14 @@ function doReferenceTest() {
     try {
       var img = Module['referenceImage'];
       var div = document.createElement('div');
-
+      
       var actualCanvas = document.createElement('canvas');
       actualCanvas.width = actualImage.width;
       actualCanvas.height = actualImage.height;
       var actualCtx = actualCanvas.getContext('2d');
       actualCtx.drawImage(actualImage, 0, 0);
       var actual = actualCtx.getImageData(0, 0, actualImage.width, actualImage.height).data;
-
+      
       var total = 0;
       var width = img.width;
       var height = img.height;
@@ -609,7 +612,7 @@ function simulateKeyEvent(eventType, keyCode, charCode) {
     }
   } else {
     // Dispatch to browser for real
-    Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e);
+    Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e); 
   }
 }
 
@@ -628,21 +631,24 @@ if (injectingInputStream) {
     'pointerlockchange', 'pointerlockerror', 'webkitpointerlockchange', 'webkitpointerlockerror', 'mozpointerlockchange', 'mozpointerlockerror', 'mspointerlockchange', 'mspointerlockerror', 'opointerlockchange', 'opointerlockerror',
     'devicemotion', 'deviceorientation',
     'mousewheel', 'wheel', 'WheelEvent', 'DOMMouseScroll',
-    'blur', 'focus', 'beforeunload', 'unload', 'resize', 'error'];
+    'blur', 'focus', 'beforeunload', 'unload', 'error'];
+
+  // Some game demos programmatically fire the resize event. For Firefox and Chrome, we detect this via event.isTrusted and know to correctly pass it through, but to make Safari happy,
+  // it's just easier to let resize come through for those demos that need it.
+  if (!Module['pageNeedsResizeEvent']) overriddenMessageTypes.push('resize');
 
   // If this_ is specified, addEventListener is called using that as the 'this' object. Otherwise the current this is used.
   function replaceEventListener(obj, this_) {
     var realAddEventListener = obj.addEventListener;
     obj.addEventListener = function(type, listener, useCapture) {
       ensureNoClientHandlers();
-      if (!this_) this_ = this;
       if (overriddenMessageTypes.indexOf(type) != -1) {
-        var filteredEventListener = function(e) { try { if (e.programmatic) listener(e); } catch(e) {} };
-        realAddEventListener.call(this_, type, filteredEventListener, useCapture);
-        registeredEventListeners.push([this_, type, filteredEventListener, useCapture]);
+        var filteredEventListener = function(e) { try { if (e.programmatic || !e.isTrusted) listener(e); } catch(e) {} };
+        realAddEventListener.call(this_ || this, type, filteredEventListener, useCapture);
+        registeredEventListeners.push([this_ || this, type, filteredEventListener, useCapture]);
       } else {
-        realAddEventListener.call(this_, type, listener, useCapture);
-        registeredEventListeners.push([this_, type, listener, useCapture]);
+        realAddEventListener.call(this_ || this, type, listener, useCapture);
+        registeredEventListeners.push([this_ || this, type, listener, useCapture]);
       }
     }
   }
@@ -669,7 +675,7 @@ Module['referenceTestPreTick'] = referenceTestPreTick;
 // Captures the whole input stream as a JavaScript formatted code.
 var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
 
-function dumpRecordedInputStream() {
+function dumpRecordedInputStream() {  
   recordedInputStream += '}<br>';
 
   var div = document.createElement('div');

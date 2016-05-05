@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Clear IndexedDB</title>
+	<meta charset="utf-8">
+</head>
+<body>
+<script src='../emtimer.js'></script>
+<script>
+	function success() { console.log('Success!'); }
+	function error() { console.log('Error!'); }
+	function blocked() { console.log('DB was in use!'); }
+	clearIndexedDBCache('xhrCache', success, error, blocked); // XHR cache for harness
+	clearIndexedDBCache('/idbfs', success, error, blocked); // Games might have stored data here
+</script>
+</body>
+</html>
