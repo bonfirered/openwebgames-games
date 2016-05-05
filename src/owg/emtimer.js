@@ -168,8 +168,6 @@ function totalProgress() {
 // Use IndexedDB for caching, and kill IndexedDB from the site in question so that it doesn't persist savegame/progress data
 // which might make subsequent runs different.
 var realIndexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-// Looks like the following does not quite have any effect.
-// window.indexedDB = window.mozIndexedDB = window.webkitIndexedDB = window.msIndexedDB = undefined;
 
 function openDatabase(dbname, dbversion, callback, errback) {
   try { var openRequest = realIndexedDB.open(dbname, dbversion);
@@ -192,7 +190,7 @@ function fetchCachedPackage(db, packageName, callback, errback) {
   try {
     var transaction = db.transaction(['FILES'], 'readonly');
     var packages = transaction.objectStore('FILES');
-    var getRequest = packages.get("file/" + packageName);
+    var getRequest = packages.get("file/" + Module.key + '/' + packageName);
     getRequest.onsuccess = function(event) {
       if (event.target.result) {
         var len = event.target.result.byteLength || event.target.result.length;
@@ -214,7 +212,7 @@ function cacheRemotePackage(db, packageName, packageData, callback, errback) {
   try {
     var transaction = db.transaction(['FILES'], 'readwrite');
     var packages = transaction.objectStore('FILES');
-    var putRequest = packages.put(packageData, "file/" + packageName);
+    var putRequest = packages.put(packageData, "file/" + Module.key + '/' + packageName);
     putRequest.onsuccess = function(event) {
       console.log('Stored file ' + packageName + ' to IndexedDB cache.');
       callback(packageName);
@@ -250,7 +248,7 @@ function idbError(e) {
 }
 
 if (Module['injectXMLHttpRequests']) {
-  openDatabase('xhrCache_' + Module.key, Module.xhrCacheVersion || 1, idbOpened, idbError);
+  openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbOpened, idbError);
 }
 
 function withIndexedDb(func) {
@@ -258,13 +256,14 @@ function withIndexedDb(func) {
   else idbOpenListeners.push(func);
 }
 
-function clearIndexedDBCache(dbName) {
+// dbName: The IndexedDB database name to delete. Default: 'xhrCache'
+function clearIndexedDBCache(dbName, onsuccess, onerror, onblocked) {
   if (dbInstance) dbInstance.close();
-  if (!dbName) dbName = 'xhrCache_' + Module.key;
+  if (!dbName) dbName = 'xhrCache';
   var req = realIndexedDB.deleteDatabase(dbName);
-  req.onsuccess = function() { console.log('Deleted IndexedDB cache ' + dbName + '!'); }
-  req.onerror = function() { console.error('Failed to delete IndexedDB cache ' + dbName + '!'); }
-  req.onblocked = function() { console.error('Failed to delete IndexedDB cache ' + dbName + ', DB was blocked!'); }
+  req.onsuccess = function() { console.log('Deleted IndexedDB cache ' + dbName + '!'); if (onsuccess) onsuccess(); }
+  req.onerror = function() { console.error('Failed to delete IndexedDB cache ' + dbName + '!'); if (onerror) onerror(); }
+  req.onblocked = function() { console.error('Failed to delete IndexedDB cache ' + dbName + ', DB was blocked!'); if (onblocked) onblocked(); }
 }
 
 // E.g. use the following function to load one by one (or do it somewhere else and set preloadedXHRs object)
