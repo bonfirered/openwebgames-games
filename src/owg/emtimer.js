@@ -637,7 +637,7 @@ if (injectingInputStream) {
       ensureNoClientHandlers();
       if (!this_) this_ = this;
       if (overriddenMessageTypes.indexOf(type) != -1) {
-        var filteredEventListener = function(e) { try { if (e.programmatic) listener(e); } catch(e) { console.error('event ' + type + ', trusted: ' + e.isTrusted); } };
+        var filteredEventListener = function(e) { try { if (e.programmatic) listener(e); } catch(e) {} };
         realAddEventListener.call(this_, type, filteredEventListener, useCapture);
         registeredEventListeners.push([this_, type, filteredEventListener, useCapture]);
       } else {
