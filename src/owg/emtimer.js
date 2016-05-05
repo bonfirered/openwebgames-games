@@ -392,13 +392,18 @@ if (Module['injectXMLHttpRequests']) {
           this_.xhr_.onload = function() {
             if (preloadXHRProgress[this_.responseType_ + '_' + this_.url_]) preloadXHRProgress[this_.responseType_ + '_' + this_.url_].loaded = preloadXHRProgress[this_.responseType_ + '_' + this_.url_].total;
 
-            // Store the downloaded data to IndexedDB cache.
-            function onStored() {
+            // If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
+            if ((this_.xhr_.status != 200 && this_.xhr_.status != 0) || (!this_.xhr_.response || !(this_.xhr_.response.byteLength || this_.xhr_.response.length))) {
               if (this_.onload) this_.onload();
+            } else {
+              // Store the downloaded data to IndexedDB cache.
+              function onStored() {
+                if (this_.onload) this_.onload();
+              }
+              withIndexedDb(function(db) {
+                cacheRemotePackage(db, this_.url_, this_.xhr_.response, onStored, onStored);
+              });
             }
-            withIndexedDb(function(db) {
-              cacheRemotePackage(db, this_.url_, this_.xhr_.response, onStored, onStored);
-            });
           }
           this_.xhr_.send();
         };
