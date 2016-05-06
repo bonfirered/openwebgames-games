@@ -6,7 +6,7 @@
 	<title>Heroes of Paragon</title>
 	<link rel="stylesheet" href="Styles/style.css">
 	<link rel="shortcut icon" href="Images/favicon.ico" />
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="jquery.2.1.3.min.js"></script>
 	<script src="Scripts/UnityProgress.js"></script>
   <script src="../cpuprofiler.js"></script>
 	<script type="text/javascript">
@@ -70,17 +70,30 @@
 	<audio id="_WebGLMusicStreaming"></audio>
 		
 	<script type='text/javascript'>
+
+  function clearIDBFS() {
+    try {
+      var idb = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+      var req = idb.deleteDatabase('/idbfs');
+      req.onsuccess = function() { console.log('Deleted HoP IDBFS!'); }
+      req.onerror = function() { console.error('Failed to delete HoP IDBFS!'); }
+      req.onblocked = function() { console.error('Failed to delete HoP IDBFS, DB was blocked!'); }
+    } catch(e) {}
+  }
+  clearIDBFS();
+
   // connect to canvas
   var Module = {
     key: 'heroesofparagon',
 
+    demoAssetSizeInBytes: 192094414,
     providesRafIntegration: true, // If true, this demo provides requestAnimationFrame() integration for emunittest built-in. Generally this needs to be false, unless the app was specially built with emunittest support enabled.
     usesEmscriptenHTML5InputAPI: true, // Set this to true for demos that utilize the Emscripten html5.h input API. Defaults to false.
     injectXMLHttpRequests: true, // If true, the harness should intercept all XHRs to provide transparent caching of assets and a progress bar.
 
     TOTAL_MEMORY: 629145600,
-    filePackagePrefixURL: "Compressed/",
-    memoryInitializerPrefixURL: "Compressed/",
+    filePackagePrefixURL: "Release/",
+    memoryInitializerPrefixURL: "Release/",
     preRun: [],
     postRun: [],
     print: (function() {
@@ -88,13 +101,15 @@
         console.log (text);
       };
     })(),
-    locateFile: function(file) {
-      if (file.indexOf('gz') != file.length-2) {
-        if (file.indexOf('Compressed/') == -1) return 'Compressed/' + file + 'gz';
-        else return file + 'gz';
+    locateFile: function(url) {
+      var serveCompressedAssets = true;
+      if (serveCompressedAssets) {
+        if (url.indexOf('Release/') == 0) return url.replace('Release/', 'Compressed/') + 'gz';
+        if (url.indexOf('/') == -1) return 'Compressed/' + url + 'gz';
       }
-      else return file;
-    }, 
+      if (url.indexOf('/') == -1) return 'Release/' + url + 'gz';
+      return url;
+    },
     printErr: function(text) {
       console.error (text);
     },
@@ -125,48 +140,119 @@
   Module.setStatus('Downloading (0.0/1)');
 </script>
 <script src="../emtimer.js"></script>
-<script src="inputstream.js"></script>
-<script src="Compressed/UnityConfig.jsgz"></script>
-<script src="Compressed/fileloader.jsgz"></script>
-<script>if (!(!Math.fround)) {
-  var script = document.createElement('script');
-  script.src = "Compressed/HoPWebGL_Mozilla.jsgz";
-  document.body.appendChild(script);
-} else {
-  var codeXHR = new XMLHttpRequest();
-  codeXHR.open('GET', 'Compressed/HoPWebGL_Mozilla.jsgz', true);
-  codeXHR.onload = function() {
-    var code = codeXHR.responseText;
-    if (!Math.fround) { 
-try {
-  console.log('optimizing out Math.fround calls');
-  var m = /var ([^=]+)=global\.Math\.fround;/.exec(code);
-  var minified = m[1];
-  if (!minified) throw 'fail';
-  var startAsm = code.indexOf('// EMSCRIPTEN_START_FUNCS');
-  var endAsm = code.indexOf('// EMSCRIPTEN_END_FUNCS');
-  var asm = code.substring(startAsm, endAsm);
-  do {
-    var moar = false; // we need to re-do, as x(x( will not be fixed
-    asm = asm.replace(new RegExp('[^a-zA-Z0-9\\$\\_]' + minified + '\\(', 'g'), function(s) { moar = true; return s[0] + '(' });
-  } while (moar);
-  code = code.substring(0, startAsm) + asm + code.substring(endAsm);
-  code = code.replace("'use asm'", "'almost asm'");
-} catch(e) { console.log('failed to optimize out Math.fround calls ' + e) }
- }
 
-    var blob = new Blob([code], { type: 'text/javascript' });
-    codeXHR = null;
-    var src = URL.createObjectURL(blob);
-    var script = document.createElement('script');
-    script.src = URL.createObjectURL(blob);
-    script.onload = function() {
-      URL.revokeObjectURL(script.src);
-    };
-    document.body.appendChild(script);
-  };
-  codeXHR.send(null);
+<script>
+
+var preloadableAssets = [
+  Module.locateFile('Release/HoPWebGL_Mozilla.data'),
+  Module.locateFile('Release/HoPWebGL_Mozilla.html.mem'),
+  'AssetBundles/WebGL/BundlesInfo.json',
+  'AssetBundles/WebGL/Common.unity3d',
+  'AssetBundles/WebGL/UI.unity3d',
+  'AssetBundles/WebGL/BehaviorTrees.unity3d',
+  'AssetBundles/WebGL/ObjectsData.unity3d',
+  'AssetBundles/WebGL/PlayersMaps.unity3d',
+  'AssetBundles/WebGL/PvPProgress.unity3d',
+  'AssetBundles/WebGL/Runes.unity3d',
+  'AssetBundles/WebGL/Tutorial.unity3d',
+  'AssetBundles/WebGL/MusicWeb.unity3d',
+  'AssetBundles/WebGL/EnvDefault.unity3d',
+  'AssetBundles/WebGL/Castle.unity3d',
+  'AssetBundles/WebGL/GoldContainer.unity3d',
+  'AssetBundles/WebGL/InfantryCamp.unity3d',
+  'AssetBundles/WebGL/ElixirFactory.unity3d',
+  'AssetBundles/WebGL/GoldFactory.unity3d',
+  'AssetBundles/WebGL/ElixirContainer.unity3d',
+  'AssetBundles/WebGL/Crossbow.unity3d',
+  'AssetBundles/WebGL/MagicSchool.unity3d',
+  'AssetBundles/WebGL/Bunker.unity3d',
+  'AssetBundles/WebGL/Walls_7-8.unity3d',
+  'AssetBundles/WebGL/Walls_6.unity3d',
+  'AssetBundles/WebGL/ArmySchol.unity3d',
+  'AssetBundles/WebGL/RuneLab.unity3d',
+  'AssetBundles/WebGL/Traps.unity3d',
+  'AssetBundles/WebGL/SplashTowerNew.unity3d',
+  'AssetBundles/WebGL/AnimalTrainer.unity3d',
+  'AssetBundles/WebGL/MachineFactory.unity3d',
+  'AssetBundles/WebGL/AntiAir.unity3d',
+  'AssetBundles/WebGL/MachineGun.unity3d',
+  'AssetBundles/WebGL/BigCannon.unity3d',
+  'AssetBundles/WebGL/Props.unity3d',
+  'AssetBundles/WebGL/BatZooka.unity3d',
+  'AssetBundles/WebGL/Dwarf.unity3d',
+  'AssetBundles/WebGL/Warrior_new.unity3d',
+  'AssetBundles/WebGL/Knight_new.unity3d',
+  'AssetBundles/WebGL/DragonRaider.unity3d',
+  'AssetBundles/WebGL/SpecialEffects.unity3d',
+  'AssetBundles/WebGL/Scafold.unity3d'
+  ];
+
+for(var i in preloadableAssets) preloadXHR(preloadableAssets[i], 'arraybuffer', null, true);
+preloadXHR(Module.locateFile('Release/HoPWebGL_Mozilla.js'));
+
+</script>
+
+<script src="inputstream.js"></script>
+
+<script>
+
+function appendScript(src) {
+  var script = document.createElement('script');
+  script.src = src;
+  document.body.appendChild(script);
 }
+
+appendScript(Module.locateFile('Release/UnityConfig.js'));
+// Kicks off the actual page run
+function runPage() {
+  appendScript(Module.locateFile('Release/fileloader.js'));
+
+/*
+  if (!(!Math.fround)) {
+    var script = document.createElement('script');
+    script.src = Module.locateFile("Release/HoPWebGL_Mozilla.js");
+    document.body.appendChild(script);
+  } else {*/
+    var codeXHR = new XMLHttpRequest();
+    codeXHR.open('GET', Module.locateFile('Release/HoPWebGL_Mozilla.js'), true);
+    codeXHR.onload = function() {
+      var code = codeXHR.responseText;
+      if (!Math.fround) { 
+  try {
+    console.log('optimizing out Math.fround calls');
+    var m = /var ([^=]+)=global\.Math\.fround;/.exec(code);
+    var minified = m[1];
+    if (!minified) throw 'fail';
+    var startAsm = code.indexOf('// EMSCRIPTEN_START_FUNCS');
+    var endAsm = code.indexOf('// EMSCRIPTEN_END_FUNCS');
+    var asm = code.substring(startAsm, endAsm);
+    do {
+      var moar = false; // we need to re-do, as x(x( will not be fixed
+      asm = asm.replace(new RegExp('[^a-zA-Z0-9\\$\\_]' + minified + '\\(', 'g'), function(s) { moar = true; return s[0] + '(' });
+    } while (moar);
+    code = code.substring(0, startAsm) + asm + code.substring(endAsm);
+    code = code.replace("'use asm'", "'almost asm'");
+  } catch(e) { console.log('failed to optimize out Math.fround calls ' + e) }
+   }
+
+      var blob = new Blob([code], { type: 'text/javascript' });
+      codeXHR = null;
+      var src = URL.createObjectURL(blob);
+      var script = document.createElement('script');
+      script.src = URL.createObjectURL(blob);
+      script.onload = function() {
+//        URL.revokeObjectURL(script.src);
+      };
+      document.body.appendChild(script);
+    };
+    codeXHR.send(null);
+//  }
+}
+
+// The page won't start executing the Emscripten/asm.js content until it gets the 'preloadXHRsfinished' message
+// and the preloadedXHRs array has been populated with cached content. Set up a listener to wait until that's done.
+window.addEventListener("message", function(e) { if (e.data == 'preloadXHRsfinished') runPage(); }, false);
+
 </script>
 </body>
 </html>
