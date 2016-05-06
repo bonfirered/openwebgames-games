@@ -19,20 +19,31 @@
 
     <script src='../cpuprofiler.js'></script>
     <script type='text/javascript'>
+
+  function clearIDBFS() {
+    try {
+      var idb = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+      var req = idb.deleteDatabase('/idbfs');
+    } catch(e) {}
+  }
+  clearIDBFS();
+
   var Module = {
     key: 'skisafari',
     // emtimer.js configuration:
-    providesRafIntegration: true, // If true, this demo provides requestAnimationFrame() integration for emunittest built-in. Generally     
+    providesRafIntegration: true, // If true, this demo provides requestAnimationFrame() integration for emunittest built-in.
     usesEmscriptenHTML5InputAPI: true, // Set this to true for demos that utilize the Emscripten html5.h input API. Defaults to false.
-    injectXMLHttpRequests: true, // If true, the harness should intercept all XHRs to provide transparent caching of assets and a progress     
+    injectXMLHttpRequests: true, // If true, the harness should intercept all XHRs to provide transparent caching of assets and a progress bar.
     TOTAL_MEMORY: 268435456,
     errorhandler: null,			// arguments: err, url, line. This function must return 'true' if the error is handled, otherwise 'false'
     compatibilitycheck: null,
+    demoAssetSizeInBytes: 74914903,
     dataUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.datagz",
     codeUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.jsgz",
     memUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.memgz",
     canvas: document.getElementById('canvas')
   };
+  top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
 </script>
 
 <script src="../emtimer.js"></script>
