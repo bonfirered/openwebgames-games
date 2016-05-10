@@ -1,7 +1,35 @@
 #!/usr/bin/env node
 
+// command line arguments
+args = process.argv.slice(2);
+
+var target = args[0];
+var bucket = null;
+
+if (target === 'dev' || target === 'development'){
+
+	// dev push
+	bucket = 'owg-dev';
+	
+} else if (target === 'stage'){
+
+	// stage push
+	bucket = 'owg-stage';
+
+} else if (target === 'prod' || target === 'production'){
+
+	// production push
+	bucket = 'owg';
+
+}
+
+if (!bucket || !target){
+	console.log('usage: push target (valid targets = dev, stage, prod)');
+	process.exit();
+}
+
 /**
- * synchronize openwebgames-games files with amazon bucket
+ * push openwebgames-games files to amazon bucket
  */
 
 // shell access
@@ -20,7 +48,7 @@ var recursive = require('recursive-readdir');
 var base = 'src/owg';
 
 // define target bucket
-var bucket = 'owg-dev';
+var bucket = 'owg-stage';
 
 // specify valid extensions
 var validExtensions = [

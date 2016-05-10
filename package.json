@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/tobius/openwebgames-games#readme",
   "devDependencies": {
-    "express": "^4.13.4"
+    "async": "^2.0.0-rc.4",
+    "express": "^4.13.4",
+    "recursive-readdir": "^2.0.0",
+    "underscore": "^1.8.3"
   }
 }
