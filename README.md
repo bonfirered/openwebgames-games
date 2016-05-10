@@ -30,13 +30,13 @@ __Push Script__
 
 There are three possible targets, please use them wisely.
 
+```
+[~/openwebgames-games] ./bin/push target
+```
+
 target	| s3 url
 ---		| ---
 dev		| https://s3.amazonaws.com/owg-dev/
 stage	| https://s3.amazonaws.com/owg-stage/
 prod	| https://s3.amazonaws.com/owg/
-
-```
-[~/openwebgames-games] ./bin/push _target_
-```
 
