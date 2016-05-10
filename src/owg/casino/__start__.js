@@ -14,8 +14,9 @@
         // Disable I-bar cursor on click+drag
         canvas.onselectstart = function () { return false; };
 
-        document.body.appendChild(canvas);
+        //document.body.appendChild(canvas);
 
+        canvas.style.opacity = 0;
         return canvas;
     };
 
@@ -134,6 +135,7 @@
                 }
 
                 app.start();
+                document.getElementById('application-canvas').style.opacity = 1;
             });
         });
     });

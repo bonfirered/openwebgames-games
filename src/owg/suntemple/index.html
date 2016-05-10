@@ -122,6 +122,8 @@ html, body, .container {
 
 function addLog(info, color) { 
 	$( "#logwindow" ).append( "<h4><small>" + info + " </small></h4>");
+	var log = document.getElementById('logwindow');
+	log.scrollTop = log.scrollHeight;
 }
 
 // combine all parallel downloads into one progress bar. 
@@ -354,6 +356,7 @@ var dataFileDeferredObject = new $.Deferred();
 var Module = {
 		key: 'suntemple',
 		// emtimer.js configuration:
+		demoAssetSizeInBytes: 144212970,
 		providesRafIntegration: true, // If true, this demo provides requestAnimationFrame() integration for emunittest built-in. Generally this needs to be false, unless the app was specially built with emunittest support enabled.
 		needsFakeMonotonouslyIncreasingTimer: false, // If true, this demo needs a faked Date.now()&performance.now() that advance after each call. If false, they can advance after each game frame. Generally set to false, unless game has problems with it.
 		fakeTimeScale: 1.0, // Specifies the time scale factor how fast time advances. If not specified, defaults to 1. Use this to scale the demo to advance faster or slower if necessary.
@@ -364,6 +367,7 @@ var Module = {
 		xhrFilter: function(url) { // This function is used to filter out certain XHRs from being fired at all. For the application perspective, it is as if they always time out.
 			return false; // If false, the XHR is ok to run and doesn't need to be discarded. If true, the XHR should be filtered out. If this function is not defined, all XHRs are ok to run.
 		},
+		pageNeedsResizeEvent: true, // This page programmatically fires a browser resize event to itself to configure its canvas size.
 
 		preInit: [], 
 		preRun: [preRunEmscripten],
@@ -434,6 +438,7 @@ var Module = {
 			this.totalDependencies = Math.max(this.totalDependencies, left);
 		}
     };
+  top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
 
 $(document).ready(function() {
 
@@ -464,6 +469,7 @@ $(document).ready(function() {
 		// insert info about compiling; 
 
 		addLog ("all downloads complete ");
+		if (location.search.indexOf('playback') == -1) addLog("Tap the 'M' key to enter flyby camera mode.");
 	}
 
 	function onAsmJsDownloaded() {
@@ -552,6 +558,7 @@ $(document).ready(function() {
 
 
 <script>
+if (location.search.indexOf('playback') == -1) document.getElementById('logwindow').style.display = 'block';
 preInitEmscripten();
 </script>
 <script src="../emtimer.js"></script>
