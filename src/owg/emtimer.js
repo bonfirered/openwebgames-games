@@ -540,26 +540,32 @@ function doReferenceTest() {
       }
 
       // Hide all other elements on the page, only show the expected and observed rendered images.
+      /* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
       var cn = document.body.childNodes;
       for(var i = 0; i < cn.length; ++i) {
         if (cn[i] && cn[i].style) cn[i].style.display = 'none';
       }
+      */
 
       wrong = Math.floor(total / (img.width*img.height*3)); // floor, to allow some margin of error for antialiasing
 
       if (wrong < 1000) { // Allow a bit of leeway.
         testResult = 'PASS';
+      /* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
         div.innerHTML = 'TEST PASSED. Timescore: ' + duration.toFixed(2) + '. (lower is better)';
         div.style.color = 'green';
         document.body.appendChild(div);
         document.body.appendChild(actualImage); // to grab it for creating the test reference
+        */
       } else {
         testResult = 'FAIL';
+      /* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
         document.body.appendChild(img); // for comparisons
         div.innerHTML = 'TEST FAILED! The expected and actual images differ on average by ' + wrong + ' units/pixel. ^=expected, v=actual. Timescore: ' + duration.toFixed(3) + '. (lower is better)';
         div.style.color = 'red';
         document.body.appendChild(div);
         document.body.appendChild(actualImage); // to grab it for creating the test reference
+        */
       }
 
     } catch(e) {
