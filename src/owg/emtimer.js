@@ -780,7 +780,9 @@ function manageOpenALAudioMasterVolumeForTimedemo() {
       applyGain(inst, desiredAudioVolume);
     }
     // Finally, kill audio altogether.
-    if (WEBAudio.audioContext && referenceTestFrameNumber >= numFramesToRender) {
+    // N.b. check for the existence of WEBAudio.audioContext.suspend, since e.g. Edge 13 doesn't have it:
+    // https://wpdev.uservoice.com/forums/257854-microsoft-edge-developer/suggestions/12855546-web-audio-api-audiocontext-needs-suspend-and-resum
+    if (WEBAudio.audioContext && WEBAudio.audioContext.suspend && referenceTestFrameNumber >= numFramesToRender) {
       WEBAudio.audioContext.suspend();
     }
   }
