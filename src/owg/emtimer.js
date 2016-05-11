@@ -684,11 +684,12 @@ if (injectingInputStream) {
   // Filter the page event handlers to only pass programmatically generated events to the site - all real user input needs to be discarded since we are
   // doing a programmatic run.
   var overriddenMessageTypes = ['mousedown', 'mouseup', 'mousemove',
-    'click', 'dblclick', 'keydown', 'keyup',
+    'click', 'dblclick', 'keydown', 'keypress', 'keyup',
     'pointerlockchange', 'pointerlockerror', 'webkitpointerlockchange', 'webkitpointerlockerror', 'mozpointerlockchange', 'mozpointerlockerror', 'mspointerlockchange', 'mspointerlockerror', 'opointerlockchange', 'opointerlockerror',
     'devicemotion', 'deviceorientation',
     'mousewheel', 'wheel', 'WheelEvent', 'DOMMouseScroll',
-    'blur', 'focus', 'beforeunload', 'unload', 'error'];
+    'blur', 'focus', 'beforeunload', 'unload', 'error',
+    'mouseout', 'pointerout', 'pointerdown', 'pointermove', 'pointerup', 'transitionend'];
 
   // Some game demos programmatically fire the resize event. For Firefox and Chrome, we detect this via event.isTrusted and know to correctly pass it through, but to make Safari happy,
   // it's just easier to let resize come through for those demos that need it.
