@@ -634,6 +634,20 @@ function simulateMouseEvent(eventType, x, y, button) {
          JSEvents.eventHandlers[i].handlerFunc(e);
       }
     }
+  } else if (!Module['dispatchMouseEventsViaDOM']) {
+    // Programmatically reating DOM events doesn't allow specifying offsetX & offsetY properly
+    // for the element, but they must be the same as clientX & clientY. Therefore we can't have a
+    // margin that would make these different.
+    if (Module['canvas'].clientWidth != Module['canvas'].offsetWidth
+      || Module['canvas'].clientHeight != Module['canvas'].offsetHeight) {
+      throw "ERROR! Canvas object must have 0px margin for direct mouse dispatch to work!";
+    }
+    for(var i = 0; i < registeredEventListeners.length; ++i) {
+      var this_ = registeredEventListeners[i][0];
+      var type = registeredEventListeners[i][1];
+      var listener = registeredEventListeners[i][2];
+      if (type == eventType) listener.call(this_, e);
+    }
   } else {
     // Dispatch directly to browser
     Module['canvas'].dispatchEvent(e);
@@ -667,9 +681,16 @@ function simulateKeyEvent(eventType, keyCode, charCode) {
          JSEvents.eventHandlers[i].handlerFunc(e);
       }
     }
+  } else if (!Module['dispatchKeyEventsViaDOM']) {
+    for(var i = 0; i < registeredEventListeners.length; ++i) {
+      var this_ = registeredEventListeners[i][0];
+      var type = registeredEventListeners[i][1];
+      var listener = registeredEventListeners[i][2];
+      if (type == eventType) listener.call(this_, e);
+    }
   } else {
     // Dispatch to browser for real
-    Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e); 
+    Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e);
   }
 }
 
@@ -687,8 +708,9 @@ if (injectingInputStream) {
     'click', 'dblclick', 'keydown', 'keypress', 'keyup',
     'pointerlockchange', 'pointerlockerror', 'webkitpointerlockchange', 'webkitpointerlockerror', 'mozpointerlockchange', 'mozpointerlockerror', 'mspointerlockchange', 'mspointerlockerror', 'opointerlockchange', 'opointerlockerror',
     'devicemotion', 'deviceorientation',
-    'mousewheel', 'wheel', 'WheelEvent', 'DOMMouseScroll',
+    'mousewheel', 'wheel', 'WheelEvent', 'DOMMouseScroll', 'contextmenu',
     'blur', 'focus', 'beforeunload', 'unload', 'error',
+    'touchstart', 'touchmove', 'touchend',
     'mouseout', 'pointerout', 'pointerdown', 'pointermove', 'pointerup', 'transitionend'];
 
   // Some game demos programmatically fire the resize event. For Firefox and Chrome, we detect this via event.isTrusted and know to correctly pass it through, but to make Safari happy,
@@ -701,8 +723,11 @@ if (injectingInputStream) {
     obj.addEventListener = function(type, listener, useCapture) {
       ensureNoClientHandlers();
       if (overriddenMessageTypes.indexOf(type) != -1) {
+        var registerListenerToDOM =
+             (type.indexOf('mouse') == -1 || Module['dispatchMouseEventsViaDOM'])
+          && (type.indexOf('key') == -1 || Module['dispatchKeyEventsViaDOM']);
         var filteredEventListener = function(e) { try { if (e.programmatic || !e.isTrusted) listener(e); } catch(e) {} };
-        realAddEventListener.call(this_ || this, type, filteredEventListener, useCapture);
+        if (registerListenerToDOM) realAddEventListener.call(this_ || this, type, filteredEventListener, useCapture);
         registeredEventListeners.push([this_ || this, type, filteredEventListener, useCapture]);
       } else {
         realAddEventListener.call(this_ || this, type, listener, useCapture);
@@ -714,6 +739,7 @@ if (injectingInputStream) {
     replaceEventListener(EventTarget.prototype, null);
   } else {
     var eventListenerObjectsToReplace = [window, document, document.body, Module['canvas']];
+    if (Module['extraDomElementsWithEventListeners']) eventListenerObjectsToReplace = eventListenerObjectsToReplace.concat(Module['extraDomElementsWithEventListeners']);
     for(var i = 0; i < eventListenerObjectsToReplace.length; ++i) {
       replaceEventListener(eventListenerObjectsToReplace[i], eventListenerObjectsToReplace[i]);
     }

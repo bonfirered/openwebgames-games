@@ -24,7 +24,6 @@
         display: none;
       }
       #main {
-        border: 1px dotted #fff;
         -webkit-box-shadow: 0 0 30px -12px #fff;
            -moz-box-shadow: 0 0 30px -12px #fff;
             -ms-box-shadow: 0 0 30px -12px #fff;
@@ -43,7 +42,8 @@
     <script>
       var Module = {
         key: 'hurry',
-        canvas: document.getElementById('main')
+        canvas: document.getElementById('main'),
+        pageNeedsResizeEvent: true
       };
     </script>
     <script src="../emtimer.js"></script>
