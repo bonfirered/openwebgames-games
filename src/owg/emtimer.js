@@ -141,6 +141,23 @@ if (injectingInputStream || recordingInputStream) {
   }
 }
 
+// Different browsers have different precision with Math functions. Therefore
+// reduce precision to lowest common denominator.
+function injectMathFunc(f) {
+  var rf = 'real_' + f;
+  Math[rf] = Math[f];
+  switch(Math[f].length) {
+    case 1: Math[f] = function(a1) { return Math.ceil(Math[rf](a1) * 10000) / 10000; }; break;
+    case 2: Math[f] = function(a1, a2) { return Math.ceil(Math[rf](a1, a2) * 10000) / 10000; }; break;
+    default: throw 'Failed to hook into Math!';
+  }
+}
+
+if (Module['injectMathFunctions'] && (recordingInputStream || injectingInputStream)) {
+  var mathFuncs = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'atan2', 'cbrt', 'cos', 'cosh', 'exp', 'expm1', 'log', 'log1p', 'log10', 'log2', 'pow', 'sin', 'sinh', 'sqrt', 'tan', 'tanh'];
+  for(var i in mathFuncs) injectMathFunc(mathFuncs[i]);
+}
+
 var realXMLHttpRequest = XMLHttpRequest;
 
 // dictionary with 'responseType|url' -> finished XHR object mappings.
