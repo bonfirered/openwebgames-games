@@ -46,7 +46,7 @@ var injectingInputStream = location.search.indexOf('playback') != -1;
 
 // In test mode (injectingInputStream == true), we always render this many fixed frames, after which the test is considered finished.
 // ?numframes=number GET parameter can override custom test length.
-var numFramesToRender = Module['overrideNumFramesToRender'] > 0 ? Module['overrideNumFramesToRender'] : 2000;
+var numFramesToRender = Module && Module['overrideNumFramesToRender'] > 0 ? Module['overrideNumFramesToRender'] : 2000;
 
 if (location.search.indexOf('numframes=') != -1) {
   numFramesToRender = parseInt(location.search.substring(location.search.indexOf('numframes=') + 'numframes='.length));
@@ -153,7 +153,7 @@ function injectMathFunc(f) {
   }
 }
 
-if (Module['injectMathFunctions'] && (recordingInputStream || injectingInputStream)) {
+if (Module && Module['injectMathFunctions'] && (recordingInputStream || injectingInputStream)) {
   var mathFuncs = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'atan2', 'cbrt', 'cos', 'cosh', 'exp', 'expm1', 'log', 'log1p', 'log10', 'log2', 'pow', 'sin', 'sinh', 'sqrt', 'tan', 'tanh'];
   for(var i in mathFuncs) injectMathFunc(mathFuncs[i]);
 }
@@ -278,7 +278,7 @@ function idbError(e) {
   idbOpenListeners = [];
 }
 
-if (Module['injectXMLHttpRequests']) {
+if (Module && Module['injectXMLHttpRequests']) {
   openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbOpened, idbError);
 }
 
@@ -287,14 +287,34 @@ function withIndexedDb(func) {
   else idbOpenListeners.push(func);
 }
 
-// dbName: The IndexedDB database name to delete. Default: 'xhrCache'
-function clearIndexedDBCache(dbName, onsuccess, onerror, onblocked) {
-  if (dbInstance) dbInstance.close();
-  if (!dbName) dbName = 'xhrCache';
-  var req = realIndexedDB.deleteDatabase(dbName);
-  req.onsuccess = function() { console.log('Deleted IndexedDB cache ' + dbName + '!'); if (onsuccess) onsuccess(); }
-  req.onerror = function() { console.error('Failed to delete IndexedDB cache ' + dbName + '!'); if (onerror) onerror(); }
-  req.onblocked = function() { console.error('Failed to delete IndexedDB cache ' + dbName + ', DB was blocked!'); if (onblocked) onblocked(); }
+/**
+ * Clear indexedDB Cache
+ *
+ * @param {String} dbName
+ * @param {Function} cb(err, dbName)
+ */
+function clearIndexedDbCache(dbName, cb){
+
+	// close db
+	if (dbInstance){
+		dbInstance.close();
+	}
+
+	// delete database
+	var result = realIndexedDB.deleteDatabase(dbName);
+
+	result.onsuccess = function(){
+		cb(null, dbName);
+	};
+
+	result.onerror = function(){
+		cb(new Error('Failed to delete database: ' + dbName), dbName);
+	};
+
+	result.onblocked = function(){
+		cb(new Error('Failed to close database: ' + dbName), dbName);
+	};
+
 }
 
 // E.g. use the following function to load one by one (or do it somewhere else and set preloadedXHRs object)
@@ -367,7 +387,7 @@ function preloadXHR(url, responseType, onload, startupBlocker) {
   });
 }
 
-if (!Module['providesRafIntegration']) {
+if (Module && !Module['providesRafIntegration']) {
   window.realRequestAnimationFrame = window.requestAnimationFrame;
   window.requestAnimationFrame = function(cb) {
     function hookedCb() {
@@ -382,7 +402,7 @@ if (!Module['providesRafIntegration']) {
 }
 
 // Hook into XMLHTTPRequest to be able to submit preloaded requests.
-if (Module['injectXMLHttpRequests']) {
+if (Module && Module['injectXMLHttpRequests']) {
   XMLHttpRequest = function() {}
   XMLHttpRequest.prototype = {
     open: function(method, url, async) {
@@ -406,7 +426,7 @@ if (Module['injectXMLHttpRequests']) {
           if (preloadedXHRs[xhrKey]) this_.xhr_ = preloadedXHRs[xhrKey];
         }
       }
-        
+
       if (this.xhr_) {
         // This particular XHR URL has been downloaded up front. Serve the preloaded one.
         setTimeout(function() {
@@ -500,7 +520,7 @@ function loadReferenceImage() {
   img.src = 'reference.png';
   // reference.png might come from a different domain than the canvas, so don't let it taint ctx.getImageData().
   // See https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image
-  img.crossOrigin = 'Anonymous'; 
+  img.crossOrigin = 'Anonymous';
   img.onload = function() {
     var canvas = document.createElement('canvas');
     canvas.width = img.width;
@@ -535,14 +555,14 @@ function doReferenceTest() {
     try {
       var img = Module['referenceImage'];
       var div = document.createElement('div');
-      
+
       var actualCanvas = document.createElement('canvas');
       actualCanvas.width = actualImage.width;
       actualCanvas.height = actualImage.height;
       var actualCtx = actualCanvas.getContext('2d');
       actualCtx.drawImage(actualImage, 0, 0);
       var actual = actualCtx.getImageData(0, 0, actualImage.width, actualImage.height).data;
-      
+
       var total = 0;
       var width = img.width;
       var height = img.height;
@@ -776,7 +796,7 @@ Module['referenceTestPreTick'] = referenceTestPreTick;
 // Captures the whole input stream as a JavaScript formatted code.
 var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
 
-function dumpRecordedInputStream() {  
+function dumpRecordedInputStream() {
   recordedInputStream += '}<br>';
 
   var div = document.createElement('div');
