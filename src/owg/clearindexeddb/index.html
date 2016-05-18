@@ -1,17 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<title>Clear IndexedDB</title>
-	<meta charset="utf-8">
-</head>
-<body>
-<script src='../emtimer.js'></script>
-<script>
-	function success() { console.log('Success!'); }
-	function error() { console.log('Error!'); }
-	function blocked() { console.log('DB was in use!'); }
-	clearIndexedDBCache('xhrCache', success, error, blocked); // XHR cache for harness
-	clearIndexedDBCache('/idbfs', success, error, blocked); // Games might have stored data here
-</script>
-</body>
+	<head>
+		<title>Clear IndexedDB</title>
+		<meta charset="utf-8"/>
+		<link href="https://fonts.googleapis.com/css?family=Fira+Sans:300" rel="stylesheet" type="text/css"/>
+		<style type="text/css">
+			html, body {
+				height: 100%;
+			}
+			body {
+				position: relative;
+				color: #fff;
+				background: none transparent;
+				font-family: "Fira Sans",sans-serif;
+				font-weight: 300;
+				letter-spacing: .12em;
+				font-size: 16px;
+				-webkit-font-smoothing: antialiased;
+				text-transform: uppercase;
+				cursor: pointer;
+			}
+			div {
+				display: block;
+				text-align: center;
+				height: 100%;
+			}
+		</style>
+	</head>
+	<body onclick="clearCache(showClearCacheResults)">
+		<div>Clear Cache</div>
+		<script src='../async.min.js'></script>
+		<script src='../emtimer.js'></script>
+		<script>
+
+		/**
+		 * clear cache
+		 *
+		 * @param {Function} [cb]
+		 */
+		var clearCache = function(cb){
+
+			if (document.body.className !== ''){
+				return;
+			}
+
+			async.parallel({
+
+				// xhr cache for harness
+				xhr: function(cb){
+					clearIndexedDbCache('xhrCache', cb);
+				},
+
+				// games might have stored data here
+				idbf: function(cb){
+					clearIndexedDbCache('/idbfs', cb);
+				}
+
+			}, function(err, dbs){
+
+				// callback
+				if (cb){
+					cb(err);
+				}
+
+				// failure
+				if (!!err){
+					return console.error(err);
+				}
+
+				// success
+				for (var db in dbs){
+					console.log('Successfully deleted database: ' + db);
+				}
+
+			});
+
+		}
+
+		/**
+		 * show clear cache results
+		 *
+		 * @param {String} err
+		 */
+		var showClearCacheResults = function(err){
+
+			// get result
+			var resultText = 'Cache Clear Successful';
+			if (!!err){
+				resultText = 'Cache Clear Failed';
+			}
+
+			// show result
+			document.getElementsByTagName('div')[0].innerText = resultText;
+
+			// reset
+			setTimeout(function(){
+				document.getElementsByTagName('div')[0].innerText = 'Clear Cache Again';
+			}, 3000);
+
+		};
+
+		</script>
+
+	</body>
 </html>
