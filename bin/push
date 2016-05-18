@@ -47,9 +47,6 @@ var recursive = require('recursive-readdir');
 // define base dir
 var base = 'src/owg';
 
-// define target bucket
-var bucket = 'owg-stage';
-
 // specify valid extensions
 var validExtensions = [
 	'3gp', 'babylon', 'css', 'data', 'datagz', 'dds', 'gif', 'html',
