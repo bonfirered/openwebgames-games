@@ -37,6 +37,13 @@ window.onerror = function(msg, url, line, column, e) {
   }
 }
 
+var Module;
+if (typeof Module === 'undefined') {
+  Module = {
+    canvas: document.getElementsByTagName('canvas')[0]
+  };
+}
+
 // If true, the page is run in a record mode where user interactively runs the page, and input stream is captured. Use this in
 // when authoring new tests to the suite.
 var recordingInputStream = location.search.indexOf('record') != -1;
@@ -46,7 +53,7 @@ var injectingInputStream = location.search.indexOf('playback') != -1;
 
 // In test mode (injectingInputStream == true), we always render this many fixed frames, after which the test is considered finished.
 // ?numframes=number GET parameter can override custom test length.
-var numFramesToRender = Module && Module['overrideNumFramesToRender'] > 0 ? Module['overrideNumFramesToRender'] : 2000;
+var numFramesToRender = Module['overrideNumFramesToRender'] > 0 ? Module['overrideNumFramesToRender'] : 2000;
 
 if (location.search.indexOf('numframes=') != -1) {
   numFramesToRender = parseInt(location.search.substring(location.search.indexOf('numframes=') + 'numframes='.length));
@@ -153,7 +160,7 @@ function injectMathFunc(f) {
   }
 }
 
-if (Module && Module['injectMathFunctions'] && (recordingInputStream || injectingInputStream)) {
+if (Module['injectMathFunctions'] && (recordingInputStream || injectingInputStream)) {
   var mathFuncs = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'atan2', 'cbrt', 'cos', 'cosh', 'exp', 'expm1', 'log', 'log1p', 'log10', 'log2', 'pow', 'sin', 'sinh', 'sqrt', 'tan', 'tanh'];
   for(var i in mathFuncs) injectMathFunc(mathFuncs[i]);
 }
@@ -278,7 +285,7 @@ function idbError(e) {
   idbOpenListeners = [];
 }
 
-if (Module && Module['injectXMLHttpRequests']) {
+if (Module['injectXMLHttpRequests']) {
   openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbOpened, idbError);
 }
 
@@ -387,7 +394,7 @@ function preloadXHR(url, responseType, onload, startupBlocker) {
   });
 }
 
-if (Module && !Module['providesRafIntegration']) {
+if (!Module['providesRafIntegration']) {
   window.realRequestAnimationFrame = window.requestAnimationFrame;
   window.requestAnimationFrame = function(cb) {
     function hookedCb() {
@@ -402,7 +409,7 @@ if (Module && !Module['providesRafIntegration']) {
 }
 
 // Hook into XMLHTTPRequest to be able to submit preloaded requests.
-if (Module && Module['injectXMLHttpRequests']) {
+if (Module['injectXMLHttpRequests']) {
   XMLHttpRequest = function() {}
   XMLHttpRequest.prototype = {
     open: function(method, url, async) {
@@ -729,13 +736,6 @@ function simulateKeyEvent(eventType, keyCode, charCode) {
     // Dispatch to browser for real
     Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e);
   }
-}
-
-var Module;
-if (typeof Module === 'undefined') {
-  Module = {
-    canvas: document.getElementsByTagName('canvas')[0]
-  };
 }
 
 if (injectingInputStream) {
