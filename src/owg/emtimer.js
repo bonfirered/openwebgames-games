@@ -106,15 +106,17 @@ function unloadAllEventHandlers() {
 
 // Mock performance.now() and Date.now() to be deterministic.
 // Unfortunately looks like there does not exist a good feature test for this, so resort to user agent sniffing.. (sad :/)
-var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-if (isSafari) {
-  realPerformance = performance;
-  performance = {
-    realNow: function() { return realPerformance.now(); },
-    now: function() { return realPerformance.now(); }
-  };
-} else {
-  performance.realNow = performance.now;
+if (!performance.realNow) {
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isSafari) {
+    realPerformance = performance;
+    performance = {
+      realNow: function() { return realPerformance.now(); },
+      now: function() { return realPerformance.now(); }
+    };
+  } else {
+    performance.realNow = performance.now;
+  }
 }
 
 Date.realNow = Date.now;
@@ -674,10 +676,10 @@ function simulateMouseEvent(eventType, x, y, button) {
   } else if (!Module['dispatchMouseEventsViaDOM']) {
     // Programmatically reating DOM events doesn't allow specifying offsetX & offsetY properly
     // for the element, but they must be the same as clientX & clientY. Therefore we can't have a
-    // margin that would make these different.
+    // border that would make these different.
     if (Module['canvas'].clientWidth != Module['canvas'].offsetWidth
       || Module['canvas'].clientHeight != Module['canvas'].offsetHeight) {
-      throw "ERROR! Canvas object must have 0px margin for direct mouse dispatch to work!";
+      throw "ERROR! Canvas object must have 0px border for direct mouse dispatch to work!";
     }
     for(var i = 0; i < registeredEventListeners.length; ++i) {
       var this_ = registeredEventListeners[i][0];
