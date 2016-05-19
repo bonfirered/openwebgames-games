@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no' />
+    <meta charset='utf-8'>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <style></style>
+    <title>Casino</title>
+    <script src="playcanvas-stable.min.js"></script>
+    <script>
+        SCENE_PATH = "373427.json";
+        CONTEXT_OPTIONS = {
+            'alpha': false,
+            'preserveDrawingBuffer': false
+        };
+    </script>
+    <canvas id='application-canvas'>
+</head>
+<body>
+    <script>
+    var Module = {
+        key: 'casino',
+
+        // emtimer.js configuration:
+        providesRafIntegration: false, // If true, this demo provides requestAnimationFrame() integration for emunittest built-in. Generally this needs to be false, unless the app was specially built with emunittest support enabled.
+        needsFakeMonotonouslyIncreasingTimer: false, // If true, this demo needs a faked Date.now()&performance.now() that advance after each call. If false, they can advance after each game frame. Generally set to false, unless game has problems with it.
+        fakeTimeScale: 1.0, // Specifies the time scale factor how fast time advances. If not specified, defaults to 1. Use this to scale the demo to advance faster or slower if necessary.
+        dontOverrideTime: false, // If true, Date.now()&performance.now() should not be faked at all for this demo, but the demo maintains the fixed timesteps itself. Generally always set to false, unless demo has been crafted with this specifically.
+        overrideNumFramesToRender: 2200, // If set to a > 0 value, this overrides the default number of frames that the test harness renders, which is 2000. This can further be overridden in the URL via '?numframes=<integer>' parameter for a single run.
+        usesEmscriptenHTML5InputAPI: false, // Set this to true for demos that utilize the Emscripten html5.h input API. Defaults to false.
+        injectXMLHttpRequests: false, // If true, the harness should intercept all XHRs to provide transparent caching of assets and a progress bar.
+        xhrFilter: function(url) { // This function is used to filter out certain XHRs from being fired at all. For the application perspective, it is as if they always time out.
+            return false; // If false, the XHR is ok to run and doesn't need to be discarded. If true, the XHR should be filtered out. If this function is not defined, all XHRs are ok to run.
+        },
+
+        canvas: document.getElementById('application-canvas')
+
+    };
+    </script>
+    <script src="../emtimer.js"></script>
+    <script src="__start__.js"></script>
+    <script src="__loading__.js"></script>
+    <script>
+        Module['onRuntimeInitialized']();
+    </script>
+</body>
+</html>

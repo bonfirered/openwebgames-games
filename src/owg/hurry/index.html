@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>hurry!</title>
+    <style type="text/css">
+      body, html {
+        padding: 0;
+        margin: 0;
+        background: #222;
+      }
+      #highscore {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        color: #fff;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        margin-top: 265px;
+        width: 400px;
+        margin-left: -200px;
+        text-align: center;
+        display: none;
+      }
+      #main {
+        -webkit-box-shadow: 0 0 30px -12px #fff;
+           -moz-box-shadow: 0 0 30px -12px #fff;
+            -ms-box-shadow: 0 0 30px -12px #fff;
+             -o-box-shadow: 0 0 30px -12px #fff;
+                box-shadow: 0 0 30px -12px #fff;
+        width: 1117px;
+        height: 768px;
+        position: absolute;
+      }
+    </style>
+</head>
+<body>
+<!--    <a href="https://github.com/hughsk/ludum-dare-27"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a> -->
+    <div id="highscore">best score: <span id="score">0</span></div>
+    <canvas id="main"></canvas>
+    <script>
+      var Module = {
+        key: 'hurry',
+        canvas: document.getElementById('main'),
+        pageNeedsResizeEvent: true,
+        injectMathFunctions: true
+      };
+    </script>
+    <script src="../emtimer.js"></script>
+    <script src='../cpuprofiler.js'></script>
+    <script>
+    if (location.search.indexOf('playback') != -1 || location.search.indexOf('record') != -1) {
+      // EMTIMER: For noninteractive use, the page should not interactively request pointer lock.
+      document.getElementById('main').requestPointerLock = function() {}
+    }
+    function addScript(src) {
+      var s = document.createElement('script');
+      s.setAttribute('src', src);
+      s.onload = function() {
+        Module['onRuntimeInitialized']();
+      }
+      document.body.appendChild(s);
+    }
+    window.onload = function() {
+      addScript('bundle.js');
+      if (location.search.indexOf('cpuprofiler') != -1) {
+        cpuprofiler_add_hooks();
+      }
+    }
+    </script>
+    <script src='inputstream.js'></script>
+
+</body>
+</html>
