@@ -1,41 +1,91 @@
-// emtimer.js
-// This script contains the harness content that is embedded on each executed page.
+/*
+ * emtimer.js
+ * This script contains the harness content that is embedded on each executed page.
+ */
 
-// If an error occurs on the page, fast-quit execution and return to harness with an error.
-window.onerror = function(msg, url, line, column, e) {
-  // window.opener points to the test harness window if one exists. If a test page is opened outside the harness, window.opener
-  // does not exist and as a result we don't auto-close on error (but show the error to user).
-  // Also ignore InvalidStateError errors because those can occur in IndexedDB operations from file:// URLs, which we don't really care about.
-  var testResults = null;
-  if (msg == 'uncaught exception: exit') { // Normal exit from test
-    var timeEnd = performance.realNow();
-    var duration = timeEnd - Module['timeStart'];
-    var cpuIdle = (duration - accumulatedCpuTime) / duration;
-    var fps = numFramesToRender * 1000.0 / duration;
-    testResults = {
-      result: 'PASS',
-      totalTime: Math.round(duration),
-      wrongPixels: 0,
-      cpuTime: Math.round(accumulatedCpuTime),
-      cpuIdle: 0,
-      fps: 0,
-      pageLoadTime: pageLoadTime,
-      numStutterEvents: 0
-    };
-  } else if (msg.indexOf('InvalidStateError') == -1) {
-    testResults = {
-      result: 'ERROR',
-      error: msg
-    };
-  }
-  top.postMessage({ msg: 'stopGame', key: Module.key, result: testResults }, '*');
-
-  unloadAllEventHandlers();
-  if (window.opener) {
-    window.opener.postMessage(testResults, "*");
-    window.close();
-  }
+/**
+ * test if inside an iframe or not
+ *
+ * @param {Void}
+ * @return {Boolean}
+ */
+function isInsideIframe(){
+	try {
+		return window.self !== window.top;
+	} catch(e){
+		return true;
+	}
 }
+
+/**
+ * handle game errors by fast-quitting and reporting back to the test suite
+ *
+ * @depends performance.realNow()
+ * @depends Module.timeStart
+ * @depends Module.key
+ * @depends accumulatedCpuTime
+ * @depends numFramesToRender
+ * @depends pageLoadTime
+ *
+ * @param {String} msg
+ * @param {String} url
+ * @param {Integer} line
+ * @param {Integer} column
+ * @param {String} err
+ */
+function onGameError(msg, url, line, column, err){
+
+	var testResults = {
+		result: 'ERROR',
+		error: msg
+	};
+
+	// actual error
+	if (msg !== 'uncaught exception: exit'){
+		console.error('game error', msg);
+	}
+
+	// only proceed if inside iframe
+	if (!isInsideIframe()){
+		return;
+	}
+
+	// this is a normal exit
+	if (msg === 'uncaught exception: exit'){
+
+		var timeEnd		= performance.realNow(),
+			duration	= timeEnd - Module['timeStart'],
+			cpuIdle		= (duration - accumulatedCpuTime) / duration,
+			fps			= numFramesToRender * 1000.0 / duration;
+
+		testResults = {
+			result				: 'PASS',
+			totalTime			: Math.round(duration),
+			wrongPixels			: 0,
+			cpuTime				: Math.round(accumulatedCpuTime),
+			cpuIdle				: cpuIdle,
+			fps					: fps,
+			pageLoadTime		: pageLoadTime,
+			numStutterEvents	: 0
+		};
+
+		console.log('game exit', testResults);
+
+	}
+
+	// report back to the test suite
+	top.postMessage({
+		msg		: 'stopGame',
+		key		: Module.key,
+		result	: testResults
+	}, '*');
+
+	// clean up before quitting
+	unloadAllEventHandlers();
+
+}
+
+window.onerror = onGameError;
 
 var Module;
 if (typeof Module === 'undefined') {
