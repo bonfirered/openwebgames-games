@@ -280,6 +280,41 @@ function unloadAllEventHandlers(){
 
 }
 
+/**
+ * Override floating point Math functions with fixed point Math functions
+ *
+ * Note: Some browsers exercise different precision with Math functions, this
+ * function reduces that precision to a lowest common denominator.
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function overrideMathFunctions(){
+
+	// susceptible math functions
+	var mathFuncs = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'atan2', 'cbrt', 'cos', 'cosh', 'exp', 'expm1', 'log', 'log1p', 'log10', 'log2', 'pow', 'sin', 'sinh', 'sqrt', 'tan', 'tanh'];
+
+	for(var i in mathFuncs){
+		var realFunc = 'real_' + mathFuncs[i];
+		Math[realFunc] = Math[mathFuncs[i]];
+		switch(Math[mathFuncs[i]].length){
+			case 1:
+				Math[mathFuncs[i]] = function(a1){
+					return Math.ceil(Math[realFunc](a1) * 10000) / 10000;
+				};
+				break;
+			case 2:
+				Math[mathFuncs[i]] = function(a1, a2){
+					return Math.ceil(Math[realFunc](a1, a2) * 10000) / 10000;
+				};
+				break;
+			default:
+				throw 'Failed to hook into Math!';
+		}
+	}
+
+}
+
 // capture game errors
 window.onerror = onGameError;
 
@@ -358,21 +393,8 @@ if (injectingInputStream || recordingInputStream) {
   }
 }
 
-// Different browsers have different precision with Math functions. Therefore
-// reduce precision to lowest common denominator.
-function injectMathFunc(f) {
-  var rf = 'real_' + f;
-  Math[rf] = Math[f];
-  switch(Math[f].length) {
-    case 1: Math[f] = function(a1) { return Math.ceil(Math[rf](a1) * 10000) / 10000; }; break;
-    case 2: Math[f] = function(a1, a2) { return Math.ceil(Math[rf](a1, a2) * 10000) / 10000; }; break;
-    default: throw 'Failed to hook into Math!';
-  }
-}
-
 if (Module['injectMathFunctions'] && (recordingInputStream || injectingInputStream)) {
-  var mathFuncs = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'atan2', 'cbrt', 'cos', 'cosh', 'exp', 'expm1', 'log', 'log1p', 'log10', 'log2', 'pow', 'sin', 'sinh', 'sqrt', 'tan', 'tanh'];
-  for(var i in mathFuncs) injectMathFunc(mathFuncs[i]);
+	overrideMathFunctions();
 }
 
 var realXMLHttpRequest = XMLHttpRequest;
