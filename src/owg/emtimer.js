@@ -562,6 +562,36 @@ function withIndexedDb(func){
 }
 
 /**
+ * Clear indexedDB Cache
+ *
+ * @param {String} dbName
+ * @param {Function} cb(err, dbName)
+ */
+function clearIndexedDbCache(dbName, cb){
+
+	// close db
+	if (dbInstance){
+		dbInstance.close();
+	}
+
+	// delete database
+	var result = realIndexedDB.deleteDatabase(dbName);
+
+	result.onsuccess = function(){
+		cb(null, dbName);
+	};
+
+	result.onerror = function(){
+		cb(new Error('Failed to delete database: ' + dbName), dbName);
+	};
+
+	result.onblocked = function(){
+		cb(new Error('Failed to close database: ' + dbName), dbName);
+	};
+
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -662,36 +692,6 @@ var idbHandler = function(err, db){
 
 if (Module['injectXMLHttpRequests']) {
 	openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbHandler);
-}
-
-/**
- * Clear indexedDB Cache
- *
- * @param {String} dbName
- * @param {Function} cb(err, dbName)
- */
-function clearIndexedDbCache(dbName, cb){
-
-	// close db
-	if (dbInstance){
-		dbInstance.close();
-	}
-
-	// delete database
-	var result = realIndexedDB.deleteDatabase(dbName);
-
-	result.onsuccess = function(){
-		cb(null, dbName);
-	};
-
-	result.onerror = function(){
-		cb(new Error('Failed to delete database: ' + dbName), dbName);
-	};
-
-	result.onblocked = function(){
-		cb(new Error('Failed to close database: ' + dbName), dbName);
-	};
-
 }
 
 // E.g. use the following function to load one by one (or do it somewhere else and set preloadedXHRs object)
