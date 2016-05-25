@@ -451,6 +451,20 @@ function suppressWindowAlerts(){
 }
 
 /**
+ * get a normalized IndexedDB reference
+ *
+ * Note: Use IndexedDB for caching, and kill IndexedDB from the site in
+ * question so that it doesn't persist savegame/progress data which might make
+ * subsequent runs different.
+ *
+ * @param {Void}
+ * @return {Object}
+ */
+function getNormalizeIndexedDb(){
+	return window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -512,6 +526,9 @@ function initializeTestSuite(){
 	// we hijack this later, so before we do that make a reference to the original instance
 	window.realXMLHttpRequest = XMLHttpRequest;
 
+	// get a normalized IndexedDB reference
+	window.realIndexedDB = getNormalizeIndexedDb();
+
 }
 
 initializeTestSuite();
@@ -521,10 +538,6 @@ var preloadedXHRs = {};
 var preloadXHRProgress = {};
 var numStartupBlockerXHRsPending = 0; // The number of XHRs active that the game needs to load up before the test starts.
 var numPreloadXHRsInFlight = 0; // The number of XHRs still active, via calls from preloadXHR().
-
-// Use IndexedDB for caching, and kill IndexedDB from the site in question so that it doesn't persist savegame/progress data
-// which might make subsequent runs different.
-var realIndexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 
 function fetchCachedPackage(db, packageName, callback, errback) {
   if (!db) {
