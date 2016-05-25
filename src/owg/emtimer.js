@@ -85,14 +85,89 @@ function onGameError(msg, url, line, column, err){
 
 }
 
-window.onerror = onGameError;
+/**
+ * combine default game properties with user defined game properties to create
+ * a complete game module
+ *
+ * @param {Void}
+ * @return {Object}
+ */
+function createCombinedModule(){
 
-var Module;
-if (typeof Module === 'undefined') {
-  Module = {
-    canvas: document.getElementsByTagName('canvas')[0]
-  };
+	var module = {
+
+		// unique game identifier
+		key: null,
+
+		// game canvas selector
+		canvas: document.getElementsByTagName('canvas')[0],
+
+		// force an advance after each call rather than after each game frame
+		// by simulating Date.now() and performance.now()
+		needsFakeMonotonouslyIncreasingTimer: false,
+
+		// do not fake Date.now() or performance.now() for this demo
+		dontOverrideTime: false,
+
+		// override the number of frames to render before ending game test
+		overrideNumFramesToRender: 2000,
+
+		// additional dom elements to unload event listeners from after each game
+		extraDomElementsWithEventListeners: [],
+
+		// provide requestAnimationFrame() for built-in emunittest
+		providesRafIntegration: false,
+
+		// enable emscripten html5.h input support
+		usesEmscriptenHTML5InputAPI: false,
+
+		// expected game asset download byte size
+		demoAssetSizeInBytes: null,
+
+		// ???
+		filePackagePrefixURL: '',
+
+		// ???
+		memoryInitializerPrefixURL: '',
+
+		// intercept all XHRs to provide transparent caching of assets and progress bar
+		injectXMLHttpRequests: true,
+
+		// ???
+		xhrFilter: null,
+
+		// Some game demos programmatically fire the resize event. For Firefox and
+		// Chrome, we detect this via event.isTrusted and know to correctly
+		// pass it through, but to make Safari happy, it's just easier to let
+		// resize come through for those demos that need it.
+		pageNeedsResizeEvent: false,
+
+		// ???
+		injectMathFunctions: false,
+
+		// specify a fake time scale factor (e.g. how fast time advances)
+		fakeTimeScale: 1.0
+
+	};
+
+	// nothing else to do
+	if (typeof window.Module === 'undefined'){
+		return module;
+	}
+
+	// inherit user defined properties
+	for (var i in window.Module){
+		if (window.Module.hasOwnProperty(i)){
+			module[i] = window.Module[i];
+		}
+	}
+
+	return module;
+
 }
+
+window.onerror = onGameError;
+window.Module = createCombinedModule();
 
 // If true, the page is run in a record mode where user interactively runs the page, and input stream is captured. Use this in
 // when authoring new tests to the suite.
