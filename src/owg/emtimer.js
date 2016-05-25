@@ -1,6 +1,10 @@
+
 /*
  * emtimer.js
- * This script contains the harness content that is embedded on each executed page.
+ * This script contains the test suite content that is embedded on each
+ * executed game test page on openwebgames.com.
+ *
+ * @author Jukka Jylänki <jjylanki@mozilla.com>
  */
 
 /**
@@ -315,6 +319,41 @@ function getPreloadProgress(){
 
 }
 
+/**
+ * open an IndexedDB database
+ *
+ * @depends realIndexedDB
+ *
+ * @param {String} name
+ * @param {Float} version
+ * @param {Function} cb(err, result)
+ */
+function openDatabase(name, version, cb){
+
+	try {
+		var req = realIndexedDB.open(name, version);
+	} catch(e){
+		return cb(e);
+	}
+
+	req.onupgradeneeded = function(evt){
+		var db = evt.target.result;
+		if (db.objectStoreNames.contains('FILES')){
+			db.deleteObjectStore('FILES');
+		}
+		db.createObjectStore('FILES');
+	};
+
+	req.onsuccess = function(evt){
+		cb(null, evt.target.result);
+	};
+
+	req.onerror = function(err){
+		cb(err);
+	};
+
+}
+
 // capture game errors
 window.onerror = onGameError;
 
@@ -407,19 +446,6 @@ var siteRoot = '';
 // which might make subsequent runs different.
 var realIndexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
 
-function openDatabase(dbname, dbversion, callback, errback) {
-  try { var openRequest = realIndexedDB.open(dbname, dbversion);
-  } catch (e) { return errback(e); }
-
-  openRequest.onupgradeneeded = function(event) {
-    var db = event.target.result;
-    if (db.objectStoreNames.contains('FILES')) db.deleteObjectStore('FILES');
-    db.createObjectStore('FILES');
-  };
-  openRequest.onsuccess = function(event) { callback(event.target.result); };
-  openRequest.onerror = function(error) { errback(error);};
-};
-
 function fetchCachedPackage(db, packageName, callback, errback) {
   if (!db) {
     errback('IndexedDB not available!');
@@ -475,25 +501,28 @@ function cacheRemotePackage(db, packageName, packageData, callback, errback) {
 idbOpenListeners = [];
 var isIdbOpen = undefined; // undefined = not yet tried, false = tried but failed to open, true = available
 var dbInstance = undefined;
+var idbHandler = function(err, db){
 
-function idbOpened(db) {
-  dbInstance = db;
-  isIdbOpen = true;
-  for(var i in idbOpenListeners) {
-    idbOpenListeners[i](db);
-  }
-  idbOpenListeners = [];
-}
-function idbError(e) {
-  isIdbOpen = false;
-  for(var i in idbOpenListeners) {
-    idbOpenListeners[i](null);
-  }
-  idbOpenListeners = [];
-}
+	if (!!err){
+		isIdbOpen = false;
+		for (var i in idbOpenListeners){
+			idbOpenListeners[i](null);
+		}
+		idbOpenListeners = [];
+		return;
+	}
+
+	dbInstance = db;
+	isIdbOpen = true;
+	for(var i in idbOpenListeners){
+		idbOpenListeners[i](db);
+	}
+	idbOpenListeners = [];
+
+};
 
 if (Module['injectXMLHttpRequests']) {
-  openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbOpened, idbError);
+	openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbHandler);
 }
 
 function withIndexedDb(func) {
