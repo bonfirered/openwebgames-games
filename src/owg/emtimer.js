@@ -190,23 +190,74 @@ function ensureNoClientHandlers(){
 
 }
 
+/**
+ * determine if page is recording the input stream
+ *
+ * Note: If true, the page is run in a record mode where user interactively
+ * runs the page, and input stream is captured. Use this in when authoring new
+ * tests to the suite.
+ *
+ * @param {Void}
+ * @return {Boolean}
+ */
+function isRecordingInputStream(){
+	return location.search.indexOf('record') != -1;
+}
+
+/**
+ * determine if page is injecting the input stream
+ *
+ * Note: If true, we are autoplaybacking a recorded input stream. If false,
+ * input is not injected (we are likely running in an interactive examination
+ * mode of a test)
+ *
+ * @param {Void}
+ * @return {Boolean}
+ */
+function isInjectingInputStream(){
+	return location.search.indexOf('playback') != -1;
+}
+
+/**
+ *
+ * @param {Void}
+ * @return {Mixed} Integer if overriding, False if not
+ */
+
+/**
+ * get the number of frames to render
+ *
+ * @depends Module.overrideNumFramesToRender
+ *
+ * @param {Void}
+ * @return {Integer}
+ */
+function getNumFramesToRender(){
+
+	// if page is overriding number of frames to render use that
+	if (location.search.indexOf('numframes=') !== -1){
+		return parseInt(location.search.substring(location.search.indexOf('numframes=') + 'numframes='.length));
+	}
+
+	// else use module defined setting
+	return Module.overrideNumFramesToRender;
+
+}
+
+// capture game errors
 window.onerror = onGameError;
+
+// create/re-create game module
 window.Module = createCombinedModule();
 
-// If true, the page is run in a record mode where user interactively runs the page, and input stream is captured. Use this in
-// when authoring new tests to the suite.
-var recordingInputStream = location.search.indexOf('record') != -1;
+// test if page is recording input stream
+window.recordingInputStream = isRecordingInputStream();
 
-// If true, we are autoplaybacking a recorded input stream. If false, input is not injected (we are likely running in an interactive examination mode of a test)
-var injectingInputStream = location.search.indexOf('playback') != -1;
+// test if page is injecting input stream
+window.injectingInputStream = isInjectingInputStream();
 
-// In test mode (injectingInputStream == true), we always render this many fixed frames, after which the test is considered finished.
-// ?numframes=number GET parameter can override custom test length.
-var numFramesToRender = Module['overrideNumFramesToRender'] > 0 ? Module['overrideNumFramesToRender'] : 2000;
-
-if (location.search.indexOf('numframes=') != -1) {
-  numFramesToRender = parseInt(location.search.substring(location.search.indexOf('numframes=') + 'numframes='.length));
-}
+// get number of frames to render
+window.numFramesToRender = getNumFramesToRender();
 
 // Currently executing frame.
 var referenceTestFrameNumber = 0;
