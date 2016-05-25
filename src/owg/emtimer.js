@@ -504,6 +504,46 @@ function fetchCachedPackage(db, packageName, cb) {
 }
 
 /**
+ * cache a remote package inside an indexedDb database
+ *
+ * @depends Module.key
+ *
+ * @param {Object} db
+ * @param {String} packageName
+ * @param {Mixed} packageData
+ * @param {Function} cb(err, data)
+ */
+function cacheRemotePackage(db, packageName, packageData, cb) {
+
+	if (!db){
+		cb('cacheRemotePackage: IndexedDB not available!');
+		return;
+	}
+
+	if (location.protocol.indexOf('file') != -1){
+		cb('Loading via file://, skipping caching to IndexedDB');
+		return;
+	}
+
+	try {
+		var transaction = db.transaction(['FILES'], 'readwrite');
+		var packages = transaction.objectStore('FILES');
+		var putRequest = packages.put(packageData, "file/" + Module.key + '/' + packageName);
+		putRequest.onsuccess = function(event){
+			console.log('Stored file ' + packageName + ' to IndexedDB cache.');
+			cb(null, packageName);
+		};
+		putRequest.onerror = function(error){
+			console.log('Failed to store file ' + packageName + ' to IndexedDB cache!');
+			cb(error);
+		};
+	} catch(e) {
+		cb(e);
+	}
+
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -577,32 +617,6 @@ var preloadedXHRs = {};
 var preloadXHRProgress = {};
 var numStartupBlockerXHRsPending = 0; // The number of XHRs active that the game needs to load up before the test starts.
 var numPreloadXHRsInFlight = 0; // The number of XHRs still active, via calls from preloadXHR().
-
-function cacheRemotePackage(db, packageName, packageData, callback, errback) {
-  if (!db) {
-    errback('cacheRemotePackage: IndexedDB not available!');
-    return;
-  }
-  if (location.protocol.indexOf('file') != -1) {
-    errback('Loading via file://, skipping caching to IndexedDB');
-    return;
-  }
-  try {
-    var transaction = db.transaction(['FILES'], 'readwrite');
-    var packages = transaction.objectStore('FILES');
-    var putRequest = packages.put(packageData, "file/" + Module.key + '/' + packageName);
-    putRequest.onsuccess = function(event) {
-      console.log('Stored file ' + packageName + ' to IndexedDB cache.');
-      callback(packageName);
-    };
-    putRequest.onerror = function(error) {
-      console.log('Failed to store file ' + packageName + ' to IndexedDB cache!');
-      errback(error);
-    };
-  } catch(e) {
-    errback(e);
-  }
-};
 
 // Async operations that are waiting for the IndexedDB to become available.
 idbOpenListeners = [];
@@ -697,10 +711,10 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 				} else {
 					// Store the downloaded data to IndexedDB cache.
 					withIndexedDb(function(db) {
-						function storeFinished() {
+						var handler = function(){
 							finished(xhr);
-						}
-						cacheRemotePackage(db, url, xhr.response, storeFinished, storeFinished);
+						};
+						cacheRemotePackage(db, url, xhr.response, handler);
 					});
 				}
 			}
@@ -819,11 +833,13 @@ if (Module['injectXMLHttpRequests']) {
 						if (this_.onload) this_.onload();
 					} else {
 						// Store the downloaded data to IndexedDB cache.
-						function onStored() {
-							if (this_.onload) this_.onload();
-						}
+						var handler = function(){
+							if (this_.onload){
+								this_.onload();
+							}
+						};
 						withIndexedDb(function(db) {
-							cacheRemotePackage(db, this_.url_, this_.xhr_.response, onStored, onStored);
+							cacheRemotePackage(db, this_.url_, this_.xhr_.response, handler);
 						});
 					}
 				}
