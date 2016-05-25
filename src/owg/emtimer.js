@@ -244,6 +244,42 @@ function getNumFramesToRender(){
 
 }
 
+/**
+ * unload all event handlers
+ *
+ * @depends registeredEventListeners
+ * @depends realXMLHttpRequest
+ * @depends realAddEventListener
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function unloadAllEventHandlers(){
+
+	// unload all registered event listeners
+	for(var i in registeredEventListeners){
+		var l = registeredEventListeners[i];
+		l[0].removeEventListener(l[1], l[2], l[3]);
+	}
+
+	// prepare registered event listeners for reuse
+	registeredEventListeners = [];
+
+	// prepare xhrs for reuse
+	preloadedXHRs = {};
+	numPreloadXHRsInFlight = 0;
+	XMLHttpRequest = realXMLHttpRequest;
+
+	// remove page unload events
+	ensureNoClientHandlers();
+
+	// suppress exceptions thrown on non-supporting browsers
+	try {
+		EventTarget.prototype.addEventListener = realAddEventListener;
+	} catch(e) {}
+
+}
+
 // capture game errors
 window.onerror = onGameError;
 
@@ -282,25 +318,6 @@ var runtimeInitialized = 0;
 var numStutterEvents = 0;
 
 var registeredEventListeners = [];
-
-function unloadAllEventHandlers() {
-  for(var i in registeredEventListeners) {
-    var l = registeredEventListeners[i];
-    l[0].removeEventListener(l[1], l[2], l[3]);
-  }
-  registeredEventListeners = [];
-
-  // Make sure no XHRs are being held on to either.
-  preloadedXHRs = {};
-  numPreloadXHRsInFlight = 0;
-  XMLHttpRequest = realXMLHttpRequest;
-
-  ensureNoClientHandlers();
-
-  try { // Suppress exceptions thrown on nonsupporting browsers.
-    EventTarget.prototype.addEventListener = realAddEventListener;
-  } catch(e) {}
-}
 
 // Mock performance.now() and Date.now() to be deterministic.
 // Unfortunately looks like there does not exist a good feature test for this, so resort to user agent sniffing.. (sad :/)
