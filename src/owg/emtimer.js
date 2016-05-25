@@ -406,6 +406,28 @@ function mockDeterministicNowBehavior(){
 }
 
 /**
+ * Mock Math.random() to be deterministic
+ *
+ * Replace Math.random() Custom LCG to be able to deterministically seed the
+ * random number generator.
+ *
+ * @depends injectingInputStream
+ * @depends recordingInputStream
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function mockDeterministicRandomBehavior(){
+	if (injectingInputStream || recordingInputStream) {
+		var randomState = 1;
+		Math.random = function(){
+			randomState = (((((1103515245 * randomState)>>>0) + 12345) >>> 0) % 0x80000000)>>>0;
+			return randomState / 0x80000000;
+		};
+	}
+}
+
+/**
  * suppress window alerts
  *
  * Note: They interfere with unattended game runs.
@@ -484,19 +506,12 @@ function initializeTestSuite(){
 	// this is an unattended run, suppress window alerts
 	suppressWindowAlerts();
 
+	// mock Math.random() to be deterministic
+	mockDeterministicRandomBehavior();
+
 }
 
 initializeTestSuite();
-
-if (injectingInputStream || recordingInputStream) {
-
-  // Replace Math.random() Custom LCG to be able to deterministically seed the random number generator.
-  var randomState = 1;
-  Math.random = function() {
-    randomState = (((((1103515245 * randomState)>>>0) + 12345) >>> 0) % 0x80000000)>>>0;
-    return randomState / 0x80000000;
-  }
-}
 
 var realXMLHttpRequest = XMLHttpRequest;
 
