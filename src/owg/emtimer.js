@@ -544,6 +544,24 @@ function cacheRemotePackage(db, packageName, packageData, cb) {
 }
 
 /**
+ * with IndexedDB open run function, else save to be run later
+ *
+ * @depends isIdbOpen
+ * @depends idbOpenListeners
+ * @depends dbInstance
+ *
+ * @param {Function} func
+ * @return {Void}
+ */
+function withIndexedDb(func){
+	if (isIdbOpen !== undefined){
+		func(dbInstance);
+	} else {
+		idbOpenListeners.push(func);
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -644,11 +662,6 @@ var idbHandler = function(err, db){
 
 if (Module['injectXMLHttpRequests']) {
 	openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbHandler);
-}
-
-function withIndexedDb(func) {
-  if (isIdbOpen !== undefined) func(dbInstance);
-  else idbOpenListeners.push(func);
 }
 
 /**
