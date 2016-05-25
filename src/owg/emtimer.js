@@ -509,19 +509,18 @@ function initializeTestSuite(){
 	// mock Math.random() to be deterministic
 	mockDeterministicRandomBehavior();
 
+	// we hijack this later, so before we do that make a reference to the original instance
+	window.realXMLHttpRequest = XMLHttpRequest;
+
 }
 
 initializeTestSuite();
-
-var realXMLHttpRequest = XMLHttpRequest;
 
 // dictionary with 'responseType|url' -> finished XHR object mappings.
 var preloadedXHRs = {};
 var preloadXHRProgress = {};
 var numStartupBlockerXHRsPending = 0; // The number of XHRs active that the game needs to load up before the test starts.
 var numPreloadXHRsInFlight = 0; // The number of XHRs still active, via calls from preloadXHR().
-
-var siteRoot = '';
 
 // Use IndexedDB for caching, and kill IndexedDB from the site in question so that it doesn't persist savegame/progress data
 // which might make subsequent runs different.
