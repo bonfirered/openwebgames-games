@@ -166,6 +166,30 @@ function createCombinedModule(){
 
 }
 
+/**
+ * Don't call any application page unload handlers as a response to window
+ * being closed.
+ *
+ * Note: This is a bit tricky to manage, since the page could register these
+ * handlers at any point, so keep watching for them and remove them if any are
+ * added.  This function is called multiple times in a semi-polling fashion to
+ * ensure these are not overridden.
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function ensureNoClientHandlers(){
+
+	if (window.onbeforeunload){
+		window.onbeforeunload = null;
+	}
+
+	if (window.onunload){
+		window.onunload = null;
+	}
+
+}
+
 window.onerror = onGameError;
 window.Module = createCombinedModule();
 
@@ -207,15 +231,6 @@ var runtimeInitialized = 0;
 var numStutterEvents = 0;
 
 var registeredEventListeners = [];
-
-// Don't call any application page unload handlers as a response to window being closed.
-function ensureNoClientHandlers() {
-  // This is a bit tricky to manage, since the page could register these handlers at any point,
-  // so keep watching for them and remove them if any are added. This function is called multiple times
-  // in a semi-polling fashion to ensure these are not overridden.
-  if (window.onbeforeunload) window.onbeforeunload = null;
-  if (window.onunload) window.onunload = null;
-}
 
 function unloadAllEventHandlers() {
   for(var i in registeredEventListeners) {
