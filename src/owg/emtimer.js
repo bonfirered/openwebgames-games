@@ -465,6 +465,45 @@ function getNormalizeIndexedDb(){
 }
 
 /**
+ * fetch a cached package from an indexedDb database
+ *
+ * @depends Module.key
+ *
+ * @param {Object} db
+ * @param {String} packageName
+ * @param {Function} cb(err, data)
+ */
+function fetchCachedPackage(db, packageName, cb) {
+
+	if (!db){
+		cb('IndexedDB not available!');
+		return;
+	}
+
+	try {
+		var transaction = db.transaction(['FILES'], 'readonly');
+		var packages = transaction.objectStore('FILES');
+		var getRequest = packages.get("file/" + Module.key + '/' + packageName);
+		getRequest.onsuccess = function(event){
+			if (event.target.result){
+				var len = event.target.result.byteLength || event.target.result.length;
+				console.log('Loaded file ' + packageName + ' from IndexedDB cache, length: ' + len);
+				cb(null, event.target.result);
+			} else {
+				// Succeeded to load, but the load came back with the value of undefined, treat that as an error since we never store undefined in db.
+				cb('Load came back as undefined');
+			}
+		};
+		getRequest.onerror = function(error){
+			cb(error);
+		};
+	} catch(e){
+		cb(e);
+	}
+
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -538,31 +577,6 @@ var preloadedXHRs = {};
 var preloadXHRProgress = {};
 var numStartupBlockerXHRsPending = 0; // The number of XHRs active that the game needs to load up before the test starts.
 var numPreloadXHRsInFlight = 0; // The number of XHRs still active, via calls from preloadXHR().
-
-function fetchCachedPackage(db, packageName, callback, errback) {
-  if (!db) {
-    errback('IndexedDB not available!');
-    return;
-  }
-  try {
-    var transaction = db.transaction(['FILES'], 'readonly');
-    var packages = transaction.objectStore('FILES');
-    var getRequest = packages.get("file/" + Module.key + '/' + packageName);
-    getRequest.onsuccess = function(event) {
-      if (event.target.result) {
-        var len = event.target.result.byteLength || event.target.result.length;
-        console.log('Loaded file ' + packageName + ' from IndexedDB cache, length: ' + len);
-        callback(event.target.result);
-      } else {
-        // Succeeded to load, but the load came back with the value of undefined, treat that as an error since we never store undefined in db.
-        errback();
-      }
-    };
-    getRequest.onerror = function(error) { errback(error); };
-  } catch(e) {
-    errback(e);
-  }
-};
 
 function cacheRemotePackage(db, packageName, packageData, callback, errback) {
   if (!db) {
@@ -656,71 +670,75 @@ function clearIndexedDbCache(dbName, cb){
 // E.g. use the following function to load one by one (or do it somewhere else and set preloadedXHRs object)
 // startupBlocker: If true, then this preload XHR is one without which the reftest game time should not progress. This is used to exclude the time
 //                 that the game waits for the network to not count towards the test time.
-function preloadXHR(url, responseType, onload, startupBlocker) {
-  if (startupBlocker) ++numStartupBlockerXHRsPending; // Used to detect when game time should start.
-  ++numPreloadXHRsInFlight; // Used to detect when the last preload XHR has finished and the game loading can start.
-  top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
+function preloadXHR(url, responseType, onload, startupBlocker){
 
-  function finished(xhrOrData) {
-    if (xhrOrData instanceof realXMLHttpRequest) preloadedXHRs[responseType + '_' + url] = xhrOrData;
-    else preloadedXHRs[responseType + '_' + url] = {
-      response: xhrOrData,
-      responseText: xhrOrData,
-      status: 200,
-      readyState: 4,
-      responseURL: url,
-      statusText: "200 OK",
-      getAllResponseHeaders: function() { return "" },
-    };
-    preloadedXHRs[responseType + '_' + url].startupBlocker = startupBlocker;
+	if (startupBlocker) ++numStartupBlockerXHRsPending; // Used to detect when game time should start.
+	++numPreloadXHRsInFlight; // Used to detect when the last preload XHR has finished and the game loading can start.
+	top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
 
-    var len = preloadedXHRs[responseType + '_' + url].response.byteLength || preloadedXHRs[responseType + '_' + url].response.length;
-    preloadXHRProgress[responseType + '_' + url] = {
-      bytesLoaded: len,
-      bytesTotal: len
-    };
-    top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+	var handler = function(err, xhrOrData){
 
-    if (onload) onload();
-    // Once all XHRs are finished, trigger the page to start running.
-    if (--numPreloadXHRsInFlight == 0) {
-      console.log('All preload XHRs finished!');
-      window.postMessage('preloadXHRsfinished', '*');
-    }
-  }
+		if (!!err){
+			var xhr = new realXMLHttpRequest();
+			xhr.open('GET', url, true);
+			xhr.responseType = responseType;
+			xhr.onprogress = function(evt) {
+				if (evt.lengthComputable) {
+					preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
+					top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+				}
+			}
+			xhr.onload = function() {
+				console.log('preloaded XHR ' + url + ' finished!');
 
-  function idbFailed() {
-    var xhr = new realXMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = responseType;
-    xhr.onprogress = function(evt) {
-      if (evt.lengthComputable) {
-        preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
-        top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
-      }
-    }
-    xhr.onload = function() {
-      console.log('preloaded XHR ' + url + ' finished!');
+				// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
+				if ((xhr.status != 200 && xhr.status != 0) || (!xhr.response || !(xhr.response.byteLength || xhr.response.length))) {
+					finished(xhr);
+				} else {
+					// Store the downloaded data to IndexedDB cache.
+					withIndexedDb(function(db) {
+						function storeFinished() {
+							finished(xhr);
+						}
+						cacheRemotePackage(db, url, xhr.response, storeFinished, storeFinished);
+					});
+				}
+			}
+			xhr.send();
+			return;
+		}
 
-      // If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
-      if ((xhr.status != 200 && xhr.status != 0) || (!xhr.response || !(xhr.response.byteLength || xhr.response.length))) {
-        finished(xhr);
-      } else {
-        // Store the downloaded data to IndexedDB cache.
-        withIndexedDb(function(db) {
-          function storeFinished() {
-            finished(xhr);
-          }
-          cacheRemotePackage(db, url, xhr.response, storeFinished, storeFinished);
-        });
-      }
-    }
-    xhr.send();
-  }
+		if (xhrOrData instanceof realXMLHttpRequest) preloadedXHRs[responseType + '_' + url] = xhrOrData;
+		else preloadedXHRs[responseType + '_' + url] = {
+			response: xhrOrData,
+			responseText: xhrOrData,
+			status: 200,
+			readyState: 4,
+			responseURL: url,
+			statusText: "200 OK",
+			getAllResponseHeaders: function() { return "" },
+		};
+		preloadedXHRs[responseType + '_' + url].startupBlocker = startupBlocker;
 
-  withIndexedDb(function(db) {
-    fetchCachedPackage(db, url, finished, idbFailed);
-  });
+		var len = preloadedXHRs[responseType + '_' + url].response.byteLength || preloadedXHRs[responseType + '_' + url].response.length;
+		preloadXHRProgress[responseType + '_' + url] = {
+			bytesLoaded: len,
+			bytesTotal: len
+		};
+		top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+
+		if (onload) onload();
+		// Once all XHRs are finished, trigger the page to start running.
+		if (--numPreloadXHRsInFlight == 0) {
+			console.log('All preload XHRs finished!');
+			window.postMessage('preloadXHRsfinished', '*');
+		}
+
+	};
+
+	withIndexedDb(function(db) {
+		fetchCachedPackage(db, url, handler);
+	});
 }
 
 if (!Module['providesRafIntegration']) {
@@ -779,59 +797,63 @@ if (Module['injectXMLHttpRequests']) {
         // To keep the execution coherent for the current set of demos, kill certain outbound XHRs so they don't stall the run.
         if (typeof Module['xhrFilter'] === 'function' && Module['xhrFilter'](this.url_)) return;
 
-        // Attempt to download the asset from IndexedDB cache.
-        function idbSuccess(data) {
-          this_.xhr_ = {
-            response: data,
-            responseText: data,
-            status: 200,
-            readyState: 4,
-            responseURL: this_.url_,
-            statusText: "200 OK",
-            getAllResponseHeaders: function() { return "" },
-          };
-          var len = data.byteLength || data.length;
-          preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
-          top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
-          if (this_.onprogress) {
-            var len = data.byteLength || data.length;
-            this_.onprogress({ loaded: len, total: len });
-          }
-          if (this_.onreadystatechange) this_.onreadystatechange();
-          if (this_.onload) this_.onload();
-        };
-        function idbFail() {
-          // The XHR has not been cached up in advance. Log a trace and do it now on demand.
-          this_.xhr_ = new realXMLHttpRequest();
-          this_.xhr_.onprogress = function(evt) {
-            if (evt.lengthComputable) {
-              preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
-              top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
-            }
-            if (this_.onprogress) this_.onprogress(evt);
-          }
-          if (this_.responseType_) this_.xhr_.responseType = this_.responseType_;
-          this_.xhr_.open(this_.method_, this_.url_, this_.async_);
-          this_.xhr_.onload = function() {
-            if (preloadXHRProgress[this_.responseType_ + '_' + this_.url_]) preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesLoaded = preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesTotal;
+		var handler = function(err, data){
 
-            // If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
-            if ((this_.xhr_.status != 200 && this_.xhr_.status != 0) || (!this_.xhr_.response || !(this_.xhr_.response.byteLength || this_.xhr_.response.length))) {
-              if (this_.onload) this_.onload();
-            } else {
-              // Store the downloaded data to IndexedDB cache.
-              function onStored() {
-                if (this_.onload) this_.onload();
-              }
-              withIndexedDb(function(db) {
-                cacheRemotePackage(db, this_.url_, this_.xhr_.response, onStored, onStored);
-              });
-            }
-          }
-          this_.xhr_.send();
-        };
+			if (!!err){
+				// The XHR has not been cached up in advance. Log a trace and do it now on demand.
+				this_.xhr_ = new realXMLHttpRequest();
+				this_.xhr_.onprogress = function(evt) {
+					if (evt.lengthComputable) {
+						preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
+						top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+					}
+					if (this_.onprogress) this_.onprogress(evt);
+				}
+				if (this_.responseType_) this_.xhr_.responseType = this_.responseType_;
+				this_.xhr_.open(this_.method_, this_.url_, this_.async_);
+				this_.xhr_.onload = function() {
+					if (preloadXHRProgress[this_.responseType_ + '_' + this_.url_]) preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesLoaded = preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesTotal;
+
+					// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
+					if ((this_.xhr_.status != 200 && this_.xhr_.status != 0) || (!this_.xhr_.response || !(this_.xhr_.response.byteLength || this_.xhr_.response.length))) {
+						if (this_.onload) this_.onload();
+					} else {
+						// Store the downloaded data to IndexedDB cache.
+						function onStored() {
+							if (this_.onload) this_.onload();
+						}
+						withIndexedDb(function(db) {
+							cacheRemotePackage(db, this_.url_, this_.xhr_.response, onStored, onStored);
+						});
+					}
+				}
+				this_.xhr_.send();
+				return;
+			}
+
+			this_.xhr_ = {
+				response: data,
+				responseText: data,
+				status: 200,
+				readyState: 4,
+				responseURL: this_.url_,
+				statusText: "200 OK",
+				getAllResponseHeaders: function() { return "" },
+			};
+			var len = data.byteLength || data.length;
+			preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
+			top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+			if (this_.onprogress) {
+				var len = data.byteLength || data.length;
+				this_.onprogress({ loaded: len, total: len });
+			}
+			if (this_.onreadystatechange) this_.onreadystatechange();
+			if (this_.onload) this_.onload();
+
+		};
+
         withIndexedDb(function(db) {
-          fetchCachedPackage(db, this_.url_, idbSuccess, idbFail);
+          fetchCachedPackage(db, this_.url_, handler);
         });
       }
     },
