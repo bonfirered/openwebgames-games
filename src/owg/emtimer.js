@@ -354,59 +354,86 @@ function openDatabase(name, version, cb){
 
 }
 
-// capture game errors
-window.onerror = onGameError;
-
-// create/re-create game module
-window.Module = createCombinedModule();
-
-// test if page is recording input stream
-window.recordingInputStream = isRecordingInputStream();
-
-// test if page is injecting input stream
-window.injectingInputStream = isInjectingInputStream();
-
-// get number of frames to render
-window.numFramesToRender = getNumFramesToRender();
-
-// Currently executing frame.
-var referenceTestFrameNumber = 0;
-
-// Guard against recursive calls to referenceTestPreTick+referenceTestTick from multiple rAFs.
-var referenceTestPreTickCalledCount = 0;
-
-// Wallclock time denoting when the page has finished loading.
-var pageLoadTime = null;
-
-// Tallies up the amount of CPU time spent in the test.
-var accumulatedCpuTime = 0;
-
-// Some tests need to receive a monotonously increasing time counter, but can't pass real wallclock time, which would make the test timing-dependent, so instead
-// craft an arbitrary increasing counter.
-var fakedTime = 0;
-
-// Tracks when Emscripten runtime has been loaded up. (main() called)
-var runtimeInitialized = 0;
-
-// Keeps track of performance stutter events. A stutter event occurs when there is a hiccup in subsequent per-frame times. (fast followed by slow)
-var numStutterEvents = 0;
-
-var registeredEventListeners = [];
-
-// Mock performance.now() and Date.now() to be deterministic.
-// Unfortunately looks like there does not exist a good feature test for this, so resort to user agent sniffing.. (sad :/)
-if (!performance.realNow) {
-  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  if (isSafari) {
-    realPerformance = performance;
-    performance = {
-      realNow: function() { return realPerformance.now(); },
-      now: function() { return realPerformance.now(); }
-    };
-  } else {
-    performance.realNow = performance.now;
-  }
+/**
+ * Mock performance.now() and Date.now() to be deterministic for Safari
+ *
+ * Note: Unfortunately looks like there does not exist a good feature test for
+ * this, so resort to user agent sniffing.. (sad :/)
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function mockDeterministicNowBehavior(){
+	if (!performance.realNow) {
+		var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+		if (isSafari) {
+			realPerformance = performance;
+			performance = {
+				realNow: function() { return realPerformance.now(); },
+				now: function() { return realPerformance.now(); }
+			};
+		} else {
+			performance.realNow = performance.now;
+		}
+	}
 }
+
+/**
+ * initialize test suite
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function initializeTestSuite(){
+
+	// capture game errors
+	window.onerror = onGameError;
+
+	// create/re-create game module
+	window.Module = createCombinedModule();
+
+	// test if page is recording input stream
+	window.recordingInputStream = isRecordingInputStream();
+
+	// test if page is injecting input stream
+	window.injectingInputStream = isInjectingInputStream();
+
+	// get number of frames to render
+	window.numFramesToRender = getNumFramesToRender();
+
+	// currently executing frame
+	window.referenceTestFrameNumber = 0;
+
+	// guard against recursive calls to referenceTestPreTick+referenceTestTick from
+	// multiple rAFs
+	window.referenceTestPreTickCalledCount = 0;
+
+	// wallclock time denoting when the page has finished loading
+	window.pageLoadTime = null;
+
+	// tallies up the amount of CPU time spent in the test
+	window.accumulatedCpuTime = 0;
+
+	// Some tests need to receive a monotonously increasing time counter, but can't
+	// pass real wallclock time, which would make the test timing-dependent, so
+	// instead craft an arbitrary increasing counter.
+	window.fakedTime = 0;
+
+	// Tracks when Emscripten runtime has been loaded up. (main() called)
+	window.runtimeInitialized = 0;
+
+	// Keeps track of performance stutter events. A stutter event occurs when there is a hiccup in subsequent per-frame times. (fast followed by slow)
+	window.numStutterEvents = 0;
+
+	// Keeps track of event listeners, so they can be unloaded when a game is closed.
+	window.registeredEventListeners = [];
+
+	// mock performance.now() and Date.now() to be deterministic
+	mockDeterministicNowBehavior();
+
+}
+
+initializeTestSuite();
 
 Date.realNow = Date.now;
 if (injectingInputStream || recordingInputStream) {
