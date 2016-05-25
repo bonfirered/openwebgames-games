@@ -142,9 +142,6 @@ function createCombinedModule(){
 		// resize come through for those demos that need it.
 		pageNeedsResizeEvent: false,
 
-		// ???
-		injectMathFunctions: false,
-
 		// specify a fake time scale factor (e.g. how fast time advances)
 		fakeTimeScale: 1.0
 
@@ -281,37 +278,40 @@ function unloadAllEventHandlers(){
 }
 
 /**
- * Override floating point Math functions with fixed point Math functions
+ * get current preloaded progress value (0 to 1)
  *
- * Note: Some browsers exercise different precision with Math functions, this
- * function reduces that precision to a lowest common denominator.
+ * @depends preloadXHRProgress
+ * @depends Module.demoAssetSizeInBytes
  *
  * @param {Void}
- * @return {Void}
+ * @return {Float}
  */
-function overrideMathFunctions(){
+function getPreloadProgress(){
 
-	// susceptible math functions
-	var mathFuncs = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'atan2', 'cbrt', 'cos', 'cosh', 'exp', 'expm1', 'log', 'log1p', 'log10', 'log2', 'pow', 'sin', 'sinh', 'sqrt', 'tan', 'tanh'];
+	var bytesLoaded = 0;
+	var bytesTotal = 0;
 
-	for(var i in mathFuncs){
-		var realFunc = 'real_' + mathFuncs[i];
-		Math[realFunc] = Math[mathFuncs[i]];
-		switch(Math[mathFuncs[i]].length){
-			case 1:
-				Math[mathFuncs[i]] = function(a1){
-					return Math.ceil(Math[realFunc](a1) * 10000) / 10000;
-				};
-				break;
-			case 2:
-				Math[mathFuncs[i]] = function(a1, a2){
-					return Math.ceil(Math[realFunc](a1, a2) * 10000) / 10000;
-				};
-				break;
-			default:
-				throw 'Failed to hook into Math!';
+	for(var i in preloadXHRProgress){
+		var x = preloadXHRProgress[i];
+		if (x.bytesTotal > 0){
+			bytesLoaded += x.bytesLoaded;
+			bytesTotal += x.bytesTotal;
 		}
 	}
+
+	if (Module['demoAssetSizeInBytes']){
+		if (bytesTotal > Module['demoAssetSizeInBytes']){
+			console.error('Game downloaded ' + bytesTotal + ' bytes, expected demo size was only ' + Module['demoAssetSizeInBytes'] + '!');
+			Module['demoAssetSizeInBytes'] = bytesTotal;
+		}
+		bytesTotal = Module['demoAssetSizeInBytes'];
+	}
+
+	if (bytesTotal == 0){
+		return 1.0;
+	}
+
+	return Math.min(1.0, bytesLoaded / bytesTotal);
 
 }
 
@@ -393,10 +393,6 @@ if (injectingInputStream || recordingInputStream) {
   }
 }
 
-if (Module['injectMathFunctions'] && (recordingInputStream || injectingInputStream)) {
-	overrideMathFunctions();
-}
-
 var realXMLHttpRequest = XMLHttpRequest;
 
 // dictionary with 'responseType|url' -> finished XHR object mappings.
@@ -406,27 +402,6 @@ var numStartupBlockerXHRsPending = 0; // The number of XHRs active that the game
 var numPreloadXHRsInFlight = 0; // The number of XHRs still active, via calls from preloadXHR().
 
 var siteRoot = '';
-
-function totalProgress() {
-  var bytesLoaded = 0;
-  var bytesTotal = 0;
-  for(var i in preloadXHRProgress) {
-    var x = preloadXHRProgress[i];
-    if (x.bytesTotal > 0) {
-      bytesLoaded += x.bytesLoaded;
-      bytesTotal += x.bytesTotal;
-    }
-  }
-  if (Module['demoAssetSizeInBytes']) {
-    if (bytesTotal > Module['demoAssetSizeInBytes']) {
-      console.error('Game downloaded ' + bytesTotal + ' bytes, expected demo size was only ' + Module['demoAssetSizeInBytes'] + '!');
-      Module['demoAssetSizeInBytes'] = bytesTotal;
-    }
-    bytesTotal = Module['demoAssetSizeInBytes'];
-  }
-  if (bytesTotal == 0) return 1.0;
-  return Math.min(1.0, bytesLoaded / bytesTotal);
-}
 
 // Use IndexedDB for caching, and kill IndexedDB from the site in question so that it doesn't persist savegame/progress data
 // which might make subsequent runs different.
@@ -582,7 +557,7 @@ function preloadXHR(url, responseType, onload, startupBlocker) {
       bytesLoaded: len,
       bytesTotal: len
     };
-    top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: totalProgress() }, '*');
+    top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
 
     if (onload) onload();
     // Once all XHRs are finished, trigger the page to start running.
@@ -599,7 +574,7 @@ function preloadXHR(url, responseType, onload, startupBlocker) {
     xhr.onprogress = function(evt) {
       if (evt.lengthComputable) {
         preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
-        top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: totalProgress() }, '*');
+        top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
       }
     }
     xhr.onload = function() {
@@ -695,7 +670,7 @@ if (Module['injectXMLHttpRequests']) {
           };
           var len = data.byteLength || data.length;
           preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
-          top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: totalProgress() }, '*');
+          top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
           if (this_.onprogress) {
             var len = data.byteLength || data.length;
             this_.onprogress({ loaded: len, total: len });
@@ -709,7 +684,7 @@ if (Module['injectXMLHttpRequests']) {
           this_.xhr_.onprogress = function(evt) {
             if (evt.lengthComputable) {
               preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
-              top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: totalProgress() }, '*');
+              top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
             }
             if (this_.onprogress) this_.onprogress(evt);
           }
