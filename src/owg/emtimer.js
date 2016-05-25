@@ -364,6 +364,8 @@ function openDatabase(name, version, cb){
  * @return {Void}
  */
 function mockDeterministicNowBehavior(){
+
+	// set performance.realNow
 	if (!performance.realNow) {
 		var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 		if (isSafari) {
@@ -376,6 +378,10 @@ function mockDeterministicNowBehavior(){
 			performance.realNow = performance.now;
 		}
 	}
+
+	// set Date.realNow
+	Date.realNow = Date.now;
+
 }
 
 /**
@@ -435,7 +441,6 @@ function initializeTestSuite(){
 
 initializeTestSuite();
 
-Date.realNow = Date.now;
 if (injectingInputStream || recordingInputStream) {
   if (!Module['dontOverrideTime']) {
     var timeScale = (typeof Module['fakeTimeScale'] !== 'undefined') ? Module['fakeTimeScale'] : 1.0;
