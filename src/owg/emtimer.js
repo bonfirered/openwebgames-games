@@ -360,6 +360,13 @@ function openDatabase(name, version, cb){
  * Note: Unfortunately looks like there does not exist a good feature test for
  * this, so resort to user agent sniffing.. (sad :/)
  *
+ * @depends injectingInputStream
+ * @depends recordingInputStream
+ * @depends Module.dontOverrideTime
+ * @depends Module.fakeTimeScale
+ * @depends Module.needsFakeMonotonouslyIncreasingTimer
+ * @depends fakedTime
+ *
  * @param {Void}
  * @return {Void}
  */
@@ -381,6 +388,43 @@ function mockDeterministicNowBehavior(){
 
 	// set Date.realNow
 	Date.realNow = Date.now;
+
+	// override now functions with fake timers if not in interactive mode
+	if (injectingInputStream || recordingInputStream){
+		if (!Module['dontOverrideTime']){
+			var timeScale = (typeof Module['fakeTimeScale'] !== 'undefined') ? Module['fakeTimeScale'] : 1.0;
+			if (Module['needsFakeMonotonouslyIncreasingTimer']) {
+				Date.now = function() { fakedTime += timeScale; return fakedTime; }
+				performance.now = function() { fakedTime += timeScale; return fakedTime; }
+			} else {
+				Date.now = function() { return fakedTime * 1000.0 * timeScale / 60.0; }
+				performance.now = function() { return fakedTime * 1000.0 * timeScale / 60.0; }
+			}
+		}
+	}
+
+}
+
+/**
+ * suppress window alerts
+ *
+ * Note: They interfere with unattended game runs.
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function suppressWindowAlerts(){
+
+	// alerts
+	window.alert = function(msg){
+		console.error('window.alert(' + msg + ')');
+	}
+
+	// confirms
+	window.confirm = function(msg){
+		console.error('window.confirm(' + msg + ')');
+		return true;
+	}
 
 }
 
@@ -437,24 +481,14 @@ function initializeTestSuite(){
 	// mock performance.now() and Date.now() to be deterministic
 	mockDeterministicNowBehavior();
 
+	// this is an unattended run, suppress window alerts
+	suppressWindowAlerts();
+
 }
 
 initializeTestSuite();
 
 if (injectingInputStream || recordingInputStream) {
-  if (!Module['dontOverrideTime']) {
-    var timeScale = (typeof Module['fakeTimeScale'] !== 'undefined') ? Module['fakeTimeScale'] : 1.0;
-    if (Module['needsFakeMonotonouslyIncreasingTimer']) {
-      Date.now = function() { fakedTime += timeScale; return fakedTime; }
-      performance.now = function() { fakedTime += timeScale; return fakedTime; }
-    } else {
-      Date.now = function() { return fakedTime * 1000.0 * timeScale / 60.0; }
-      performance.now = function() { return fakedTime * 1000.0 * timeScale / 60.0; }
-    }
-  }
-  // This is an unattended run, don't allow window.alert()s to intrude.
-  window.alert = function(msg) { console.error('window.alert(' + msg + ')'); }
-  window.confirm = function(msg) { console.error('window.confirm(' + msg + ')'); return true; }
 
   // Replace Math.random() Custom LCG to be able to deterministically seed the random number generator.
   var randomState = 1;
