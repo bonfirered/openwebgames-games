@@ -551,7 +551,7 @@ function cacheRemotePackage(db, packageName, packageData, cb) {
 }
 
 /**
- * with IndexedDB open run function, else save to be run later
+ * run function once IndexedDB is open
  *
  * @depends isIdbOpen
  * @depends idbOpenListeners
