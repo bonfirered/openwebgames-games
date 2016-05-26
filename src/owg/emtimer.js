@@ -1149,6 +1149,24 @@ function rampFloat(x0, y0, x1, y1, val) {
 }
 
 /**
+ * apply a desired volume gain? to an audioInstance
+ *
+ * desiredAudioVolume: Normalized value in the range [0,1]
+ *
+ * @param {Object} audioInstance
+ * @param {Float} desiredAudioVolume
+ * @return {Void}
+ */
+function applyGain(audioInstance, desiredAudioVolume){
+	if (audioInstance && audioInstance.gain && audioInstance.gain.gain){
+		if (audioInstance.gain.gain.originalValue === undefined){
+			audioInstance.gain.gain.originalValue = audioInstance.gain.gain.value;
+		}
+		audioInstance.gain.gain.value = desiredAudioVolume * audioInstance.gain.gain.originalValue;
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1402,13 +1420,6 @@ var referenceTestT0 = 0;
 
 // Captures the whole input stream as a JavaScript formatted code.
 var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
-
-function applyGain(inst, desiredAudioVolume) {
-  if (inst && inst.gain && inst.gain.gain) {
-    if (inst.gain.gain.originalValue === undefined) inst.gain.gain.originalValue = inst.gain.gain.value;
-    inst.gain.gain.value = desiredAudioVolume * inst.gain.gain.originalValue;
-  }
-}
 
 // Perform a nice fade-in and fade-out of audio volume.
 function manageOpenALAudioMasterVolumeForTimedemo() {
