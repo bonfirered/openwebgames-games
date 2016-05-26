@@ -762,9 +762,7 @@ function provideRequestAnimationFrameIntegration(){
 				if (typeof Module !== 'undefined' && !Module['TOTAL_MEMORY'] && Module['preMainLoop']){
 					Module['preMainLoop']();
 				}
-				if (typeof Module !== 'undefined' && Module['referenceTestPreTick']){
-					Module['referenceTestPreTick']();
-				}
+				referenceTestPreTick();
 				cb();
 				if (typeof Module !== 'undefined' && Module['referenceTestTick']){
 					Module['referenceTestTick']();
@@ -1100,6 +1098,26 @@ function replaceEventListener(obj, this_){
 }
 
 /**
+ * pre-emptively track ticks to prevent tick counter recursions
+ *
+ * @depends referenceTestPreTickCalledCount
+ * @depends performance.realNow
+ * @depends referenceTestT0 *
+ * @depends pageLoadTime
+ * @depends pageStartupT0
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function referenceTestPreTick(){
+	++referenceTestPreTickCalledCount;
+	referenceTestT0 = performance.realNow();
+	if (pageLoadTime === null){
+		pageLoadTime = performance.realNow() - pageStartupT0;
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1351,13 +1369,6 @@ if (injectingInputStream) {
 // Wallclock time for when we started CPU execution of the current frame.
 var referenceTestT0 = 0;
 
-function referenceTestPreTick() {
-  ++referenceTestPreTickCalledCount;
-  referenceTestT0 = performance.realNow();
-  if (pageLoadTime === null) pageLoadTime = performance.realNow() - pageStartupT0;
-}
-Module['referenceTestPreTick'] = referenceTestPreTick;
-
 // Captures the whole input stream as a JavaScript formatted code.
 var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
 
@@ -1533,3 +1544,4 @@ if (injectingInputStream || recordingInputStream) {
 
 // Page load starts now.
 var pageStartupT0 = performance.realNow();
+
