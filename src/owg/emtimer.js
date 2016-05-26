@@ -1135,6 +1135,20 @@ function dumpRecordedInputStream(){
 }
 
 /**
+ * create a float ramp based on two known vector magnitudes
+ *
+ * @param {Float} x0
+ * @param {Float} y0
+ * @param {Float} x1
+ * @param {Float} y1
+ * @param {Integer} val
+ * @return {Float}
+ */
+function rampFloat(x0, y0, x1, y1, val) {
+	return (val <= x0) ? y0 : (val >= x1 ? y1 : ((val - x0) / (x1 - x0) * (y1 - y0) + y0));
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1389,10 +1403,6 @@ var referenceTestT0 = 0;
 // Captures the whole input stream as a JavaScript formatted code.
 var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
 
-function rampFloat(x0, y0, x1, y1, val) {
-  return (val <= x0) ? y0 : (val >= x1 ? y1 : ((val-x0)/(x1-x0)*(y1-y0) + y0));
-}
-
 function applyGain(inst, desiredAudioVolume) {
   if (inst && inst.gain && inst.gain.gain) {
     if (inst.gain.gain.originalValue === undefined) inst.gain.gain.originalValue = inst.gain.gain.value;
@@ -1406,7 +1416,6 @@ function manageOpenALAudioMasterVolumeForTimedemo() {
   var silenceTime = 90;
   // Only fade out for now.
   if (referenceTestFrameNumber < numFramesToRender-fadeTime-silenceTime) return;
-
   var desiredAudioVolume = Math.min(rampFloat(0, 0.0, fadeTime, 1.0, referenceTestFrameNumber), rampFloat(numFramesToRender-fadeTime-silenceTime, 1.0, numFramesToRender-silenceTime, 0.0, referenceTestFrameNumber));
 
   var pageBGAudio = document.getElementById('AudioElement');
