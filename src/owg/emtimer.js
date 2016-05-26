@@ -808,6 +808,148 @@ function loadReferenceImage(){
 }
 
 /**
+ * perform per-pixel rendering comparion test
+ *
+ * @depends Module.ctx
+ * @depends Module.canvas
+ * @depends performance.realNow
+ * @depends Module.timeStart
+ * @depends accumulatedCpuTime
+ * @depends numFramesToRender
+ * @depends Module.referenceImage
+ * @depends Module.referenceImageData
+ * @depends pageLoadTime
+ * @depends numStutterEvents
+ * @depends Module.key
+ * @depends top.postMessage
+ * @depends window.opener.postMessage
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function doReferenceTest(){
+
+	var canvas;
+
+	// Find Emscripten-specific location of the GL context that the page has been rendering to.
+	if (typeof GLctx !== 'undefined'){
+		canvas = GLctx.canvas;
+	} else if (Module.ctx){
+		canvas = Module.ctx.canvas;
+	} else if (Module['canvas']){
+		canvas = Module['canvas'];
+	} else {
+		throw 'Cannot find application canvas!';
+	}
+
+	// Grab rendered WebGL front buffer image to a JS-side image object.
+	var actualImage = new Image();
+
+	function reftest(){
+		var timeEnd = performance.realNow();
+		var duration = timeEnd - Module['timeStart'];
+		var cpuIdle = (duration - accumulatedCpuTime) / duration;
+		var fps = numFramesToRender * 1000.0 / duration;
+		var wrong = Infinity;
+		var testResult = 'FAIL';
+
+		try {
+			var img = Module['referenceImage'];
+			var div = document.createElement('div');
+
+			var actualCanvas = document.createElement('canvas');
+			actualCanvas.width = actualImage.width;
+			actualCanvas.height = actualImage.height;
+
+			var actualCtx = actualCanvas.getContext('2d');
+			actualCtx.drawImage(actualImage, 0, 0);
+
+			var actual = actualCtx.getImageData(0, 0, actualImage.width, actualImage.height).data;
+
+			var total = 0;
+			var width = img.width;
+			var height = img.height;
+			var expected = Module['referenceImageData'];
+
+			// Compute per-pixel error diff.
+			for (var x = 0; x < width; x++){
+				for (var y = 0; y < height; y++){
+					total += Math.abs(expected[y*width*4 + x*4 + 0] - actual[y*width*4 + x*4 + 0]);
+					total += Math.abs(expected[y*width*4 + x*4 + 1] - actual[y*width*4 + x*4 + 1]);
+					total += Math.abs(expected[y*width*4 + x*4 + 2] - actual[y*width*4 + x*4 + 2]);
+				}
+			}
+
+			// Hide all other elements on the page, only show the expected and observed rendered images.
+			/* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
+			var cn = document.body.childNodes;
+			for(var i = 0; i < cn.length; ++i){
+				if (cn[i] && cn[i].style) cn[i].style.display = 'none';
+			}
+			*/
+
+			wrong = Math.floor(total / (img.width*img.height*3)); // floor, to allow some margin of error for antialiasing
+
+			if (wrong < 1000){ // Allow a bit of leeway.
+				testResult = 'PASS';
+				/* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
+				div.innerHTML = 'TEST PASSED. Timescore: ' + duration.toFixed(2) + '. (lower is better)';
+				div.style.color = 'green';
+				document.body.appendChild(div);
+				document.body.appendChild(actualImage); // to grab it for creating the test reference
+				*/
+			} else {
+				testResult = 'FAIL';
+				/* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
+				document.body.appendChild(img); // for comparisons
+				div.innerHTML = 'TEST FAILED! The expected and actual images differ on average by ' + wrong + ' units/pixel. ^=expected, v=actual. Timescore: ' + duration.toFixed(3) + '. (lower is better)';
+				div.style.color = 'red';
+				document.body.appendChild(div);
+				document.body.appendChild(actualImage); // to grab it for creating the test reference
+				*/
+			}
+
+		} catch(e) {
+			console.error(e);
+		}
+
+		var testResults = {
+			totalTime: Math.round(duration),
+			wrongPixels: wrong,
+			result: testResult,
+			cpuTime: Math.round(accumulatedCpuTime),
+			cpuIdle: cpuIdle,
+			fps: fps,
+			pageLoadTime: pageLoadTime,
+			numStutterEvents: numStutterEvents
+		};
+		console.log('reftest finished, diff: ' + wrong);
+
+		top.postMessage({ msg: 'stopGame', key: Module.key, results: testResults }, '*');
+
+		if (window.opener){
+			// Post out test results.
+			window.opener.postMessage(testResults, "*");
+			window.onbeforeunload = null; // Don't call any application onbeforeunload handlers as a response to window.close() below.
+			window.close();
+		}
+	}
+
+	try {
+		actualImage.src = canvas.toDataURL();
+		actualImage.onload = reftest;
+	} catch(e) {
+		reftest(); // canvas.toDataURL() likely failed, return results immediately.
+	}
+
+	// Emscripten-specific: stop rendering the page further.
+	if (typeof Browser !== 'undefined' && Browser.mainLoop) {
+		Browser.mainLoop.pause();
+		Browser.mainLoop.func = Browser.mainLoop.runner = null;
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1027,119 +1169,6 @@ if (Module['injectXMLHttpRequests']) {
     get statusText() { return this.xhr_.statusText; },
     get timeout() { return this.xhr_.timeout; }
   };
-}
-
-// Performs the per-pixel rendering comparison test.
-function doReferenceTest() {
-  var canvas;
-  // Find Emscripten-specific location of the GL context that the page has been rendering to.
-  if (typeof GLctx !== 'undefined') canvas = GLctx.canvas;
-  else if (Module.ctx) canvas = Module.ctx.canvas;
-  else if (Module['canvas']) canvas = Module['canvas'];
-  else throw 'Cannot find application canvas!';
-
-  // Grab rendered WebGL front buffer image to a JS-side image object.
-  var actualImage = new Image();
-
-  function reftest() {
-    var timeEnd = performance.realNow();
-    var duration = timeEnd - Module['timeStart'];
-    var cpuIdle = (duration - accumulatedCpuTime) / duration;
-    var fps = numFramesToRender * 1000.0 / duration;
-    var wrong = Infinity;
-    var testResult = 'FAIL';
-
-    try {
-      var img = Module['referenceImage'];
-      var div = document.createElement('div');
-
-      var actualCanvas = document.createElement('canvas');
-      actualCanvas.width = actualImage.width;
-      actualCanvas.height = actualImage.height;
-      var actualCtx = actualCanvas.getContext('2d');
-      actualCtx.drawImage(actualImage, 0, 0);
-      var actual = actualCtx.getImageData(0, 0, actualImage.width, actualImage.height).data;
-
-      var total = 0;
-      var width = img.width;
-      var height = img.height;
-      var expected = Module['referenceImageData'];
-      // Compute per-pixel error diff.
-      for (var x = 0; x < width; x++) {
-        for (var y = 0; y < height; y++) {
-          total += Math.abs(expected[y*width*4 + x*4 + 0] - actual[y*width*4 + x*4 + 0]);
-          total += Math.abs(expected[y*width*4 + x*4 + 1] - actual[y*width*4 + x*4 + 1]);
-          total += Math.abs(expected[y*width*4 + x*4 + 2] - actual[y*width*4 + x*4 + 2]);
-        }
-      }
-
-      // Hide all other elements on the page, only show the expected and observed rendered images.
-      /* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
-      var cn = document.body.childNodes;
-      for(var i = 0; i < cn.length; ++i) {
-        if (cn[i] && cn[i].style) cn[i].style.display = 'none';
-      }
-      */
-
-      wrong = Math.floor(total / (img.width*img.height*3)); // floor, to allow some margin of error for antialiasing
-
-      if (wrong < 1000) { // Allow a bit of leeway.
-        testResult = 'PASS';
-      /* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
-        div.innerHTML = 'TEST PASSED. Timescore: ' + duration.toFixed(2) + '. (lower is better)';
-        div.style.color = 'green';
-        document.body.appendChild(div);
-        document.body.appendChild(actualImage); // to grab it for creating the test reference
-        */
-      } else {
-        testResult = 'FAIL';
-      /* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
-        document.body.appendChild(img); // for comparisons
-        div.innerHTML = 'TEST FAILED! The expected and actual images differ on average by ' + wrong + ' units/pixel. ^=expected, v=actual. Timescore: ' + duration.toFixed(3) + '. (lower is better)';
-        div.style.color = 'red';
-        document.body.appendChild(div);
-        document.body.appendChild(actualImage); // to grab it for creating the test reference
-        */
-      }
-
-    } catch(e) {
-      console.error(e);
-    }
-
-    var testResults = {
-      totalTime: Math.round(duration),
-      wrongPixels: wrong,
-      result: testResult,
-      cpuTime: Math.round(accumulatedCpuTime),
-      cpuIdle: cpuIdle,
-      fps: fps,
-      pageLoadTime: pageLoadTime,
-      numStutterEvents: numStutterEvents
-    };
-    console.log('reftest finished, diff: ' + wrong);
-
-    top.postMessage({ msg: 'stopGame', key: Module.key, results: testResults }, '*');
-
-    if (window.opener) {
-      // Post out test results.
-      window.opener.postMessage(testResults, "*");
-      window.onbeforeunload = null; // Don't call any application onbeforeunload handlers as a response to window.close() below.
-      window.close();
-    }
-  }
-
-  try {
-    actualImage.src = canvas.toDataURL();
-    actualImage.onload = reftest;
-  } catch(e) {
-    reftest(); // canvas.toDataURL() likely failed, return results immediately.
-  }
-
-  // Emscripten-specific: stop rendering the page further.
-  if (typeof Browser !== 'undefined' && Browser.mainLoop) {
-    Browser.mainLoop.pause();
-    Browser.mainLoop.func = Browser.mainLoop.runner = null;
-  }
 }
 
 // eventType: "mousemove", "mousedown" or "mouseup".
