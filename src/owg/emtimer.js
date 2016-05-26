@@ -599,6 +599,147 @@ function clearIndexedDbCache(dbName, cb){
 }
 
 /**
+ * load XHR data
+ *
+ * @todo: use this to replace duplicated callings inside preloadXHR
+ *
+ * @param {String} url
+ * @param {String} responseType
+ * @param {Function} onload
+ * @param {Boolean} startupBlocker
+ * @return {Void}
+ */
+function loadXHR(url, responseType, onload, startupBlocker){
+	return;
+}
+
+/**
+ * preload XHR data
+ *
+ * E.g. use the following function to load one by one (or do it somewhere else
+ * and set preloadedXHRs object)
+ *
+ * startupBlocker: If true, then this preload XHR is one without which the
+ * reftest game time should not progress. This is used to exclude the time that
+ * the game waits for the network to not count towards the test time.
+ *
+ * @depends numStartupBlockerXHRsPending
+ * @depends Module.key
+ * @depends realXMLHttpRequest
+ * @depends preloadXHRProgress
+ * @depends top.postMessage
+ * @depends window.postMessage
+ * @depends finish() // @TODO: This function does not exist anywhere, should it be onload?
+ * @depends preloadedXHRs
+ * @depends numPreloadXHRsInFlight
+ *
+ * @param {String} url
+ * @param {String} responseType
+ * @param {Function} onload
+ * @param {Boolean} startupBlocker
+ * @return {Void}
+ */
+function preloadXHR(url, responseType, onload, startupBlocker){
+
+	console.log('preloadXHR', arguments);
+
+	// Used to detect when game time should start.
+	if (startupBlocker){
+		++numStartupBlockerXHRsPending;
+	}
+
+	// Used to detect when the last preload XHR has finished and the game loading can start.
+	++numPreloadXHRsInFlight;
+
+	// tell test suite
+	top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
+
+	var preloadFailure = function(err){
+
+		var xhr = new realXMLHttpRequest();
+		xhr.open('GET', url, true);
+		xhr.responseType = responseType;
+
+		xhr.onprogress = function(evt) {
+			if (evt.lengthComputable) {
+				preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
+				top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+			}
+		}
+
+		xhr.onload = function() {
+			console.log('preloaded XHR ' + url + ' finished!');
+
+			// @todo: refactor this handler (always assuming success seems wrong on first blush)
+
+			// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
+			if ((xhr.status != 200 && xhr.status != 0) || (!xhr.response || !(xhr.response.byteLength || xhr.response.length))) {
+				preloadSuccess(xhr);
+			} else {
+				// Store the downloaded data to IndexedDB cache.
+				withIndexedDb(function(db) {
+					var handler = function(){
+						preloadSuccess(xhr);
+					};
+					cacheRemotePackage(db, url, xhr.response, handler);
+				});
+			}
+		}
+
+		xhr.send();
+
+	};
+
+	var preloadSuccess = function(xhrOrData){
+
+		if (xhrOrData instanceof realXMLHttpRequest){
+			preloadedXHRs[responseType + '_' + url] = xhrOrData;
+		} else {
+			preloadedXHRs[responseType + '_' + url] = {
+				response: xhrOrData,
+				responseText: xhrOrData,
+				status: 200,
+				readyState: 4,
+				responseURL: url,
+				statusText: "200 OK",
+				getAllResponseHeaders: function() { return "" },
+			};
+		}
+		preloadedXHRs[responseType + '_' + url].startupBlocker = startupBlocker;
+
+		var len = preloadedXHRs[responseType + '_' + url].response.byteLength || preloadedXHRs[responseType + '_' + url].response.length;
+		preloadXHRProgress[responseType + '_' + url] = {
+			bytesLoaded: len,
+			bytesTotal: len
+		};
+
+		top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+
+		if (onload){
+			onload();
+		}
+
+		// Once all XHRs are finished, trigger the page to start running.
+		if (--numPreloadXHRsInFlight == 0) {
+			console.log('All preload XHRs finished!');
+			window.postMessage('preloadXHRsfinished', '*');
+		}
+
+	};
+
+	var preloadHandler = function(err, xhrOrData){
+		if (!!err){
+			return preloadFailure(err);
+		}
+		preloadSuccess(xhrOrData);
+	};
+
+	withIndexedDb(function(db) {
+		fetchCachedPackage(db, url, preloadHandler);
+	});
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -699,80 +840,6 @@ var idbHandler = function(err, db){
 
 if (Module['injectXMLHttpRequests']) {
 	openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbHandler);
-}
-
-// E.g. use the following function to load one by one (or do it somewhere else and set preloadedXHRs object)
-// startupBlocker: If true, then this preload XHR is one without which the reftest game time should not progress. This is used to exclude the time
-//                 that the game waits for the network to not count towards the test time.
-function preloadXHR(url, responseType, onload, startupBlocker){
-
-	if (startupBlocker) ++numStartupBlockerXHRsPending; // Used to detect when game time should start.
-	++numPreloadXHRsInFlight; // Used to detect when the last preload XHR has finished and the game loading can start.
-	top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
-
-	var handler = function(err, xhrOrData){
-
-		if (!!err){
-			var xhr = new realXMLHttpRequest();
-			xhr.open('GET', url, true);
-			xhr.responseType = responseType;
-			xhr.onprogress = function(evt) {
-				if (evt.lengthComputable) {
-					preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
-					top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
-				}
-			}
-			xhr.onload = function() {
-				console.log('preloaded XHR ' + url + ' finished!');
-
-				// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
-				if ((xhr.status != 200 && xhr.status != 0) || (!xhr.response || !(xhr.response.byteLength || xhr.response.length))) {
-					finished(xhr);
-				} else {
-					// Store the downloaded data to IndexedDB cache.
-					withIndexedDb(function(db) {
-						var handler = function(){
-							finished(xhr);
-						};
-						cacheRemotePackage(db, url, xhr.response, handler);
-					});
-				}
-			}
-			xhr.send();
-			return;
-		}
-
-		if (xhrOrData instanceof realXMLHttpRequest) preloadedXHRs[responseType + '_' + url] = xhrOrData;
-		else preloadedXHRs[responseType + '_' + url] = {
-			response: xhrOrData,
-			responseText: xhrOrData,
-			status: 200,
-			readyState: 4,
-			responseURL: url,
-			statusText: "200 OK",
-			getAllResponseHeaders: function() { return "" },
-		};
-		preloadedXHRs[responseType + '_' + url].startupBlocker = startupBlocker;
-
-		var len = preloadedXHRs[responseType + '_' + url].response.byteLength || preloadedXHRs[responseType + '_' + url].response.length;
-		preloadXHRProgress[responseType + '_' + url] = {
-			bytesLoaded: len,
-			bytesTotal: len
-		};
-		top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
-
-		if (onload) onload();
-		// Once all XHRs are finished, trigger the page to start running.
-		if (--numPreloadXHRsInFlight == 0) {
-			console.log('All preload XHRs finished!');
-			window.postMessage('preloadXHRsfinished', '*');
-		}
-
-	};
-
-	withIndexedDb(function(db) {
-		fetchCachedPackage(db, url, handler);
-	});
 }
 
 if (!Module['providesRafIntegration']) {
