@@ -30,6 +30,7 @@ function isInsideIframe(){
  * @depends accumulatedCpuTime
  * @depends numFramesToRender
  * @depends pageLoadTime
+ * @depends top.postMessage
  *
  * @param {String} msg
  * @param {String} url
@@ -46,7 +47,13 @@ function onGameError(msg, url, line, column, err){
 
 	// actual error
 	if (msg !== 'uncaught exception: exit'){
-		console.error('game error', msg);
+		console.error('game error', {
+			msg: msg,
+			url: url,
+			line: line,
+			column: column,
+			err: err
+		});
 	}
 
 	// only proceed if inside iframe
