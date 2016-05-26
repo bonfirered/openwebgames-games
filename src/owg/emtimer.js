@@ -1118,6 +1118,23 @@ function referenceTestPreTick(){
 }
 
 /**
+ * dump recorded input stream to the html body
+ *
+ * @depends recordedInputStream
+ * @depends Module.canvas
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function dumpRecordedInputStream(){
+	recordedInputStream += '}<br>';
+	var div = document.createElement('div');
+	div.innerHTML = '<pre>'+recordedInputStream+'</pre>';
+	document.body.appendChild(div);
+	Module['canvas'].style = 'display: none';
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1371,15 +1388,6 @@ var referenceTestT0 = 0;
 
 // Captures the whole input stream as a JavaScript formatted code.
 var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
-
-function dumpRecordedInputStream() {
-  recordedInputStream += '}<br>';
-
-  var div = document.createElement('div');
-  div.innerHTML = '<pre>'+recordedInputStream+'</pre>';
-  document.body.appendChild(div);
-  Module['canvas'].style = 'display: none';
-}
 
 function rampFloat(x0, y0, x1, y1, val) {
   return (val <= x0) ? y0 : (val >= x1 ? y1 : ((val-x0)/(x1-x0)*(y1-y0) + y0));
