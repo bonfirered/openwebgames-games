@@ -126,7 +126,7 @@ function createCombinedModule(){
 		// additional dom elements to unload event listeners from after each game
 		extraDomElementsWithEventListeners: [],
 
-		// provide requestAnimationFrame() for built-in emunittest
+		// demo provides it's own requestAnimationFrame() integration (from emunittest)
 		providesRafIntegration: false,
 
 		// enable emscripten html5.h input support
@@ -740,6 +740,74 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 }
 
 /**
+ * provide requestAnimationFrame() integration
+ *
+ * @depends Module.providesRafIntegration
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function provideRequestAnimationFrameIntegration(){
+	if (!Module['providesRafIntegration']) {
+
+		// make a reference to the original instance before we hijack it
+		window.realRequestAnimationFrame = window.requestAnimationFrame;
+
+		window.requestAnimationFrame = function(cb){
+
+			// If we are running a non-Emscripten app, pump pre/post main
+			// loop handlers for cpu profiler
+			// Note: Module.TOTAL_MEMORY hints if this was Emscripten or not
+			function hookedCb() {
+				if (typeof Module !== 'undefined' && !Module['TOTAL_MEMORY'] && Module['preMainLoop']){
+					Module['preMainLoop']();
+				}
+				if (typeof Module !== 'undefined' && Module['referenceTestPreTick']){
+					Module['referenceTestPreTick']();
+				}
+				cb();
+				if (typeof Module !== 'undefined' && Module['referenceTestTick']){
+					Module['referenceTestTick']();
+				}
+				if (typeof Module !== 'undefined' && !Module['TOTAL_MEMORY'] && Module['postMainLoop']){
+					Module['postMainLoop']();
+				}
+			}
+			window.realRequestAnimationFrame(hookedCb);
+		}
+
+	}
+}
+
+/**
+ * load the reference image for a game (sets Module.referenceImage and
+ * Module.referenceImageData)
+ *
+ * Note: XHRs in the expected render output image, always 'reference.png' in
+ * the root directory of the test.
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function loadReferenceImage(){
+	var img = new Image();
+	img.src = 'reference.png';
+	// reference.png might come from a different domain than the canvas, so don't
+	// let it taint ctx.getImageData().
+	// See https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image
+	img.crossOrigin = 'Anonymous';
+	img.onload = function(){
+		var canvas = document.createElement('canvas');
+		canvas.width = img.width;
+		canvas.height = img.height;
+		var ctx = canvas.getContext('2d');
+		ctx.drawImage(img, 0, 0);
+		Module['referenceImageData'] = ctx.getImageData(0, 0, img.width, img.height).data;
+	}
+	Module['referenceImage'] = img;
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -838,26 +906,12 @@ var idbHandler = function(err, db){
 
 };
 
-if (Module['injectXMLHttpRequests']) {
-	openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbHandler);
-}
-
-if (!Module['providesRafIntegration']) {
-  window.realRequestAnimationFrame = window.requestAnimationFrame;
-  window.requestAnimationFrame = function(cb) {
-    function hookedCb() {
-      if (typeof Module !== 'undefined' && !Module['TOTAL_MEMORY'] && Module['preMainLoop']) Module['preMainLoop'](); // If we are running a non-Emscripten app, pump pre/post main loop handlers for cpu profiler (Module.TOTAL_MEMORY hints if this was Emscripten or not)
-      if (typeof Module !== 'undefined' && Module['referenceTestPreTick']) Module['referenceTestPreTick']();
-      cb();
-      if (typeof Module !== 'undefined' && Module['referenceTestTick']) Module['referenceTestTick']();
-      if (typeof Module !== 'undefined' && !Module['TOTAL_MEMORY'] && Module['postMainLoop']) Module['postMainLoop']();
-    }
-    window.realRequestAnimationFrame(hookedCb);
-  }
-}
+// provide RequestAnimationFrame() integration (if applicable)
+provideRequestAnimationFrameIntegration();
 
 // Hook into XMLHTTPRequest to be able to submit preloaded requests.
 if (Module['injectXMLHttpRequests']) {
+	openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbHandler);
   XMLHttpRequest = function() {}
   XMLHttpRequest.prototype = {
     open: function(method, url, async) {
@@ -973,24 +1027,6 @@ if (Module['injectXMLHttpRequests']) {
     get statusText() { return this.xhr_.statusText; },
     get timeout() { return this.xhr_.timeout; }
   };
-}
-
-// XHRs in the expected render output image, always 'reference.png' in the root directory of the test.
-function loadReferenceImage() {
-  var img = new Image();
-  img.src = 'reference.png';
-  // reference.png might come from a different domain than the canvas, so don't let it taint ctx.getImageData().
-  // See https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image
-  img.crossOrigin = 'Anonymous';
-  img.onload = function() {
-    var canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    Module['referenceImageData'] = ctx.getImageData(0, 0, img.width, img.height).data;
-  }
-  Module['referenceImage'] = img;
 }
 
 // Performs the per-pixel rendering comparison test.
