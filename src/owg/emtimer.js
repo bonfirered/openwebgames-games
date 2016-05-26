@@ -950,6 +950,65 @@ function doReferenceTest(){
 }
 
 /**
+ * simulate mouse event
+ *
+ * eventType: "mousemove", "mousedown" or "mouseup".
+ * x and y: Normalized coordinate in the range [0,1] where to inject the event.
+ * button: which button was clicked. 0 = mouse left button. If eventType="mousemove", pass 0.
+ *
+ * @depends Module.canvas
+ * @depends Module.usesEmscriptenHTML5InputAPI
+ * @depends Module.dispatchMouseEventsViaDOM
+ * @depends registeredEventListeners
+ *
+ * @param {String} eventType (mousemove, mousedown, mouseup)
+ * @param {Float} x
+ * @param {Float} y
+ * @param {Integer} button
+ * @return {Void}
+ */
+function simulateMouseEvent(eventType, x, y, button) {
+
+	// Remap from [0,1] to canvas CSS pixel size.
+	x *= Module['canvas'].clientWidth;
+	y *= Module['canvas'].clientHeight;
+	var rect = Module['canvas'].getBoundingClientRect();
+	// Offset the injected coordinate from top-left of the client area to the top-left of the canvas.
+	x = Math.round(rect.left + x);
+	y = Math.round(rect.top + y);
+	var e = document.createEvent("MouseEvents");
+	e.initMouseEvent(eventType, true, true, window, eventType == 'mousemove' ? 0 : 1, x, y, x, y, 0, 0, 0, 0, button, null);
+	e.programmatic = true;
+
+	// Dispatch to Emscripten's html5.h API:
+	if (Module['usesEmscriptenHTML5InputAPI'] && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0){
+		for(var i = 0; i < JSEvents.eventHandlers.length; ++i){
+			if ((JSEvents.eventHandlers[i].target == Module['canvas'] || JSEvents.eventHandlers[i].target == window) && JSEvents.eventHandlers[i].eventTypeString == eventType){
+				JSEvents.eventHandlers[i].handlerFunc(e);
+			}
+		}
+	} else if (!Module['dispatchMouseEventsViaDOM']){
+		// Programmatically reating DOM events doesn't allow specifying offsetX & offsetY properly
+		// for the element, but they must be the same as clientX & clientY. Therefore we can't have a
+		// border that would make these different.
+		if (Module['canvas'].clientWidth != Module['canvas'].offsetWidth || Module['canvas'].clientHeight != Module['canvas'].offsetHeight){
+			throw "ERROR! Canvas object must have 0px border for direct mouse dispatch to work!";
+		}
+		for(var i = 0; i < registeredEventListeners.length; ++i){
+			var this_ = registeredEventListeners[i][0];
+			var type = registeredEventListeners[i][1];
+			var listener = registeredEventListeners[i][2];
+			if (type == eventType){
+				listener.call(this_, e);
+			}
+		}
+	} else {
+		// Dispatch directly to browser
+		Module['canvas'].dispatchEvent(e);
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1169,52 +1228,6 @@ if (Module['injectXMLHttpRequests']) {
     get statusText() { return this.xhr_.statusText; },
     get timeout() { return this.xhr_.timeout; }
   };
-}
-
-// eventType: "mousemove", "mousedown" or "mouseup".
-// x and y: Normalized coordinate in the range [0,1] where to inject the event.
-// button: which button was clicked. 0 = mouse left button. If eventType="mousemove", pass 0.
-function simulateMouseEvent(eventType, x, y, button) {
-  // Remap from [0,1] to canvas CSS pixel size.
-  x *= Module['canvas'].clientWidth;
-  y *= Module['canvas'].clientHeight;
-  var rect = Module['canvas'].getBoundingClientRect();
-  // Offset the injected coordinate from top-left of the client area to the top-left of the canvas.
-  x = Math.round(rect.left + x);
-  y = Math.round(rect.top + y);
-  var e = document.createEvent("MouseEvents");
-  e.initMouseEvent(eventType, true, true, window,
-                   eventType == 'mousemove' ? 0 : 1, x, y, x, y,
-                   0, 0, 0, 0,
-                   button, null);
-  e.programmatic = true;
-
-  // Dispatch to Emscripten's html5.h API:
-  if (Module['usesEmscriptenHTML5InputAPI'] && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0) {
-    for(var i = 0; i < JSEvents.eventHandlers.length; ++i) {
-      if ((JSEvents.eventHandlers[i].target == Module['canvas'] || JSEvents.eventHandlers[i].target == window)
-       && JSEvents.eventHandlers[i].eventTypeString == eventType) {
-         JSEvents.eventHandlers[i].handlerFunc(e);
-      }
-    }
-  } else if (!Module['dispatchMouseEventsViaDOM']) {
-    // Programmatically reating DOM events doesn't allow specifying offsetX & offsetY properly
-    // for the element, but they must be the same as clientX & clientY. Therefore we can't have a
-    // border that would make these different.
-    if (Module['canvas'].clientWidth != Module['canvas'].offsetWidth
-      || Module['canvas'].clientHeight != Module['canvas'].offsetHeight) {
-      throw "ERROR! Canvas object must have 0px border for direct mouse dispatch to work!";
-    }
-    for(var i = 0; i < registeredEventListeners.length; ++i) {
-      var this_ = registeredEventListeners[i][0];
-      var type = registeredEventListeners[i][1];
-      var listener = registeredEventListeners[i][2];
-      if (type == eventType) listener.call(this_, e);
-    }
-  } else {
-    // Dispatch directly to browser
-    Module['canvas'].dispatchEvent(e);
-  }
 }
 
 function simulateKeyEvent(eventType, keyCode, charCode) {
