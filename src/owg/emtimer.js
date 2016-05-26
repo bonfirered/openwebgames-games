@@ -1062,6 +1062,44 @@ function simulateKeyEvent(eventType, keyCode, charCode){
 }
 
 /**
+ * ???
+ *
+ * Note: If this_ is specified, addEventListener is called using that as the 'this' object. Otherwise the current this is used.
+ *
+ * @depends overriddenMessageTypes
+ * @depends Module.dispatchMouseEventsViaDOM
+ * @depends Module.dispatchKeyEventsViaDOM
+ * @depends registeredEventListeners
+ *
+ * @param {Object} obj
+ * @param {Object} this_
+ * @return {Void}
+ */
+function replaceEventListener(obj, this_){
+	var realAddEventListener = obj.addEventListener;
+	obj.addEventListener = function(type, listener, useCapture){
+		ensureNoClientHandlers();
+		if (overriddenMessageTypes.indexOf(type) != -1){
+			var registerListenerToDOM = (type.indexOf('mouse') == -1 || Module['dispatchMouseEventsViaDOM']) && (type.indexOf('key') == -1 || Module['dispatchKeyEventsViaDOM']);
+			var filteredEventListener = function(e){
+				try {
+					if (e.programmatic || !e.isTrusted){
+						listener(e);
+					}
+				} catch(e) {}
+			};
+			if (registerListenerToDOM){
+				realAddEventListener.call(this_ || this, type, filteredEventListener, useCapture);
+			}
+			registeredEventListeners.push([this_ || this, type, filteredEventListener, useCapture]);
+		} else {
+			realAddEventListener.call(this_ || this, type, listener, useCapture);
+			registeredEventListeners.push([this_ || this, type, listener, useCapture]);
+		}
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1299,24 +1337,6 @@ if (injectingInputStream) {
   // it's just easier to let resize come through for those demos that need it.
   if (!Module['pageNeedsResizeEvent']) overriddenMessageTypes.push('resize');
 
-  // If this_ is specified, addEventListener is called using that as the 'this' object. Otherwise the current this is used.
-  function replaceEventListener(obj, this_) {
-    var realAddEventListener = obj.addEventListener;
-    obj.addEventListener = function(type, listener, useCapture) {
-      ensureNoClientHandlers();
-      if (overriddenMessageTypes.indexOf(type) != -1) {
-        var registerListenerToDOM =
-             (type.indexOf('mouse') == -1 || Module['dispatchMouseEventsViaDOM'])
-          && (type.indexOf('key') == -1 || Module['dispatchKeyEventsViaDOM']);
-        var filteredEventListener = function(e) { try { if (e.programmatic || !e.isTrusted) listener(e); } catch(e) {} };
-        if (registerListenerToDOM) realAddEventListener.call(this_ || this, type, filteredEventListener, useCapture);
-        registeredEventListeners.push([this_ || this, type, filteredEventListener, useCapture]);
-      } else {
-        realAddEventListener.call(this_ || this, type, listener, useCapture);
-        registeredEventListeners.push([this_ || this, type, listener, useCapture]);
-      }
-    }
-  }
   if (typeof EventTarget !== 'undefined') {
     replaceEventListener(EventTarget.prototype, null);
   } else {
