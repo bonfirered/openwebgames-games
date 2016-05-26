@@ -1009,6 +1009,59 @@ function simulateMouseEvent(eventType, x, y, button) {
 }
 
 /**
+ * simulate key event
+ *
+ * @depends Module.usesEmscriptenHTML5InputAPI
+ * @depends Module.dispatchKeyEventsViaDOM
+ * @depends Module.canvas
+ *
+ * @param {String} eventType
+ * @param {String} keyCode
+ * @param {String} charCode
+ * @return {Void}
+ */
+function simulateKeyEvent(eventType, keyCode, charCode){
+	// Don't use the KeyboardEvent object because of http://stackoverflow.com/questions/8942678/keyboardevent-in-chrome-keycode-is-0/12522752#12522752
+	// See also http://output.jsbin.com/awenaq/3
+	//    var e = document.createEvent('KeyboardEvent');
+	//    if (e.initKeyEvent) {
+	//      e.initKeyEvent(eventType, true, true, window, false, false, false, false, keyCode, charCode);
+	//  } else {
+
+	var e = document.createEventObject ? document.createEventObject() : document.createEvent("Events");
+	if (e.initEvent){
+		e.initEvent(eventType, true, true);
+	}
+
+	e.keyCode = keyCode;
+	e.which = keyCode;
+	e.charCode = charCode;
+	e.programmatic = true;
+	//  }
+
+	// Dispatch directly to Emscripten's html5.h API:
+	if (Module['usesEmscriptenHTML5InputAPI'] && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0){
+		for(var i = 0; i < JSEvents.eventHandlers.length; ++i){
+			if ((JSEvents.eventHandlers[i].target == Module['canvas'] || JSEvents.eventHandlers[i].target == window) && JSEvents.eventHandlers[i].eventTypeString == eventType){
+				JSEvents.eventHandlers[i].handlerFunc(e);
+			}
+		}
+	} else if (!Module['dispatchKeyEventsViaDOM']){
+		for(var i = 0; i < registeredEventListeners.length; ++i){
+			var this_ = registeredEventListeners[i][0];
+			var type = registeredEventListeners[i][1];
+			var listener = registeredEventListeners[i][2];
+			if (type == eventType){
+				listener.call(this_, e);
+			}
+		}
+	} else {
+		// Dispatch to browser for real
+		Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e);
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1228,46 +1281,6 @@ if (Module['injectXMLHttpRequests']) {
     get statusText() { return this.xhr_.statusText; },
     get timeout() { return this.xhr_.timeout; }
   };
-}
-
-function simulateKeyEvent(eventType, keyCode, charCode) {
-  // Don't use the KeyboardEvent object because of http://stackoverflow.com/questions/8942678/keyboardevent-in-chrome-keycode-is-0/12522752#12522752
-  // See also http://output.jsbin.com/awenaq/3
-  //    var e = document.createEvent('KeyboardEvent');
-  //    if (e.initKeyEvent) {
-  //      e.initKeyEvent(eventType, true, true, window, false, false, false, false, keyCode, charCode);
-  //  } else {
-
-  var e = document.createEventObject ? document.createEventObject() : document.createEvent("Events");
-    if (e.initEvent) {
-      e.initEvent(eventType, true, true);
-    }
-
-  e.keyCode = keyCode;
-  e.which = keyCode;
-  e.charCode = charCode;
-  e.programmatic = true;
-  //  }
-
-  // Dispatch directly to Emscripten's html5.h API:
-  if (Module['usesEmscriptenHTML5InputAPI'] && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0) {
-    for(var i = 0; i < JSEvents.eventHandlers.length; ++i) {
-      if ((JSEvents.eventHandlers[i].target == Module['canvas'] || JSEvents.eventHandlers[i].target == window)
-       && JSEvents.eventHandlers[i].eventTypeString == eventType) {
-         JSEvents.eventHandlers[i].handlerFunc(e);
-      }
-    }
-  } else if (!Module['dispatchKeyEventsViaDOM']) {
-    for(var i = 0; i < registeredEventListeners.length; ++i) {
-      var this_ = registeredEventListeners[i][0];
-      var type = registeredEventListeners[i][1];
-      var listener = registeredEventListeners[i][2];
-      if (type == eventType) listener.call(this_, e);
-    }
-  } else {
-    // Dispatch to browser for real
-    Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e);
-  }
 }
 
 if (injectingInputStream) {
