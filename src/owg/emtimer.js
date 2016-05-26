@@ -1167,6 +1167,61 @@ function applyGain(audioInstance, desiredAudioVolume){
 }
 
 /**
+ * perform a nice fade-in and fade-out of audio volume
+ *
+ * @depends referenceTestFrameNumber
+ * @depends numFramesToRender
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function manageOpenALAudioMasterVolumeForTimedemo(){
+
+	var fadeTime = 90;
+	var silenceTime = 90;
+
+	// Only fade out for now.
+	if (referenceTestFrameNumber < numFramesToRender - fadeTime - silenceTime){
+		return;
+	}
+
+	var desiredAudioVolume = Math.min(
+		rampFloat(0, 0.0, fadeTime, 1.0, referenceTestFrameNumber),
+		rampFloat(numFramesToRender - fadeTime - silenceTime, 1.0, numFramesToRender - silenceTime, 0.0, referenceTestFrameNumber)
+	);
+
+	var pageBGAudio = document.getElementById('AudioElement');
+	if (pageBGAudio){
+		pageBGAudio.volume = desiredAudioVolume;
+	}
+
+	if (typeof AL !== 'undefined' && AL.currentContext && AL.currentContext.gain){
+		AL.currentContext.gain.value = desiredAudioVolume;
+	} else {
+		if (typeof AL !== 'undefined' && AL.src){
+			for(var i = 0; i < AL.src.length; ++i){
+				var src = AL.src[i];
+				applyGain(src, desiredAudioVolume);
+			}
+		}
+	}
+
+	if (typeof WEBAudio !== 'undefined' && WEBAudio.audioInstances){
+		for (var i in WEBAudio.audioInstances){
+			var inst = WEBAudio.audioInstances[i];
+			applyGain(inst, desiredAudioVolume);
+		}
+
+		// Finally, kill audio altogether.
+		// N.b. check for the existence of WEBAudio.audioContext.suspend, since e.g. Edge 13 doesn't have it:
+		// https://wpdev.uservoice.com/forums/257854-microsoft-edge-developer/suggestions/12855546-web-audio-api-audiocontext-needs-suspend-and-resum
+		if (WEBAudio.audioContext && WEBAudio.audioContext.suspend && referenceTestFrameNumber >= numFramesToRender){
+			WEBAudio.audioContext.suspend();
+		}
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1420,41 +1475,6 @@ var referenceTestT0 = 0;
 
 // Captures the whole input stream as a JavaScript formatted code.
 var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
-
-// Perform a nice fade-in and fade-out of audio volume.
-function manageOpenALAudioMasterVolumeForTimedemo() {
-  var fadeTime = 90;
-  var silenceTime = 90;
-  // Only fade out for now.
-  if (referenceTestFrameNumber < numFramesToRender-fadeTime-silenceTime) return;
-  var desiredAudioVolume = Math.min(rampFloat(0, 0.0, fadeTime, 1.0, referenceTestFrameNumber), rampFloat(numFramesToRender-fadeTime-silenceTime, 1.0, numFramesToRender-silenceTime, 0.0, referenceTestFrameNumber));
-
-  var pageBGAudio = document.getElementById('AudioElement');
-  if (pageBGAudio) pageBGAudio.volume = desiredAudioVolume;
-
-  if (typeof AL !== 'undefined' && AL.currentContext && AL.currentContext.gain) {
-    AL.currentContext.gain.value = desiredAudioVolume;
-  } else {
-    if (typeof AL !== 'undefined' && AL.src) {
-      for(var i = 0; i < AL.src.length; ++i) {
-        var src = AL.src[i];
-        applyGain(src, desiredAudioVolume);
-      }
-    }
-  }
-  if (typeof WEBAudio !== 'undefined' && WEBAudio.audioInstances) {
-    for (var i in WEBAudio.audioInstances) {
-      var inst = WEBAudio.audioInstances[i];
-      applyGain(inst, desiredAudioVolume);
-    }
-    // Finally, kill audio altogether.
-    // N.b. check for the existence of WEBAudio.audioContext.suspend, since e.g. Edge 13 doesn't have it:
-    // https://wpdev.uservoice.com/forums/257854-microsoft-edge-developer/suggestions/12855546-web-audio-api-audiocontext-needs-suspend-and-resum
-    if (WEBAudio.audioContext && WEBAudio.audioContext.suspend && referenceTestFrameNumber >= numFramesToRender) {
-      WEBAudio.audioContext.suspend();
-    }
-  }
-}
 
 // Holds the amount of time in msecs that the previously rendered frame took. Used to estimate when a stutter event occurs (fast frame followed by a slow frame)
 var lastFrameDuration = -1;
