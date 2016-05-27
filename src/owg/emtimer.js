@@ -1341,6 +1341,28 @@ function initializeRuntime(){
 }
 
 /**
+ * compute normalized canvas position from css pixels
+ *
+ * Note: Maps mouse coordinate from canvas CSS pixels to normalized [0,1]
+ * range. In y coordinate y grows downwards.
+ *
+ * @depends Module.canvas
+ *
+ * @param {Event} e
+ * @return {Array} [x,y]
+ */
+function computeNormalizedCanvasPosition(e) {
+	var rect = Module['canvas'].getBoundingClientRect();
+	var x = e.clientX - rect.left;
+	var y = e.clientY - rect.top;
+	var clientWidth = Module['canvas'].clientWidth;
+	var clientHeight = Module['canvas'].clientHeight;
+	x /= clientWidth;
+	y /= clientHeight;
+	return [x, y];
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1601,32 +1623,20 @@ var lastFrameDuration = -1;
 // Wallclock time for when the previous frame finished.
 var lastFrameTick = -1;
 
-// Maps mouse coordinate from canvas CSS pixels to normalized [0,1] range. In y coordinate y grows downwards.
-function computeNormalizedCanvasPos(e) {
-  var rect = Module['canvas'].getBoundingClientRect();
-  var x = e.clientX - rect.left;
-  var y = e.clientY - rect.top;
-  var clientWidth = Module['canvas'].clientWidth;
-  var clientHeight = Module['canvas'].clientHeight;
-  x /= clientWidth;
-  y /= clientHeight;
-  return [x, y];
-}
-
 // Inject mouse and keyboard capture event handlers to record input stream.
 if (recordingInputStream) {
   Module['canvas'].addEventListener("mousedown", function(e) {
-    var pos = computeNormalizedCanvasPos(e);
+    var pos = computeNormalizedCanvasPosition(e);
     recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousedown", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
     });
 
   Module['canvas'].addEventListener("mouseup", function(e) {
-    var pos = computeNormalizedCanvasPos(e);
+    var pos = computeNormalizedCanvasPosition(e);
     recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mouseup", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
     });
 
   Module['canvas'].addEventListener("mousemove", function(e) {
-    var pos = computeNormalizedCanvasPos(e);
+    var pos = computeNormalizedCanvasPosition(e);
     recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousemove", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
     });
 
