@@ -404,14 +404,24 @@ function mockDeterministicNowBehavior(){
 
 	// override now functions with fake timers if not in interactive mode
 	if (injectingInputStream || recordingInputStream){
-		if (!Module['dontOverrideTime']){
-			var timeScale = (typeof Module['fakeTimeScale'] !== 'undefined') ? Module['fakeTimeScale'] : 1.0;
-			if (Module['needsFakeMonotonouslyIncreasingTimer']) {
-				Date.now = function() { fakedTime += timeScale; return fakedTime; }
-				performance.now = function() { fakedTime += timeScale; return fakedTime; }
+		if (!Module.dontOverrideTime){
+			var timeScale = (typeof Module.fakeTimeScale !== 'undefined') ? Module.fakeTimeScale : 1.0;
+			if (Module.needsFakeMonotonouslyIncreasingTimer) {
+				Date.now = function(){
+					fakedTime += timeScale;
+					return fakedTime;
+				};
+				performance.now = function(){
+					fakedTime += timeScale;
+					return fakedTime;
+				};
 			} else {
-				Date.now = function() { return fakedTime * 1000.0 * timeScale / 60.0; }
-				performance.now = function() { return fakedTime * 1000.0 * timeScale / 60.0; }
+				Date.now = function(){
+					return fakedTime * 1000.0 * timeScale / 60.0;
+				};
+				performance.now = function(){
+					return fakedTime * 1000.0 * timeScale / 60.0;
+				};
 			}
 		}
 	}
@@ -453,13 +463,13 @@ function suppressWindowAlerts(){
 	// alerts
 	window.alert = function(msg){
 		console.error('window.alert(' + msg + ')');
-	}
+	};
 
 	// confirms
 	window.confirm = function(msg){
 		console.error('window.confirm(' + msg + ')');
 		return true;
-	}
+	};
 
 }
 
@@ -671,7 +681,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 				preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
 				top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
 			}
-		}
+		};
 
 		xhr.onload = function() {
 			console.log('preloaded XHR ' + url + ' finished!');
@@ -679,7 +689,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 			// @todo: refactor this handler (always assuming success seems wrong on first blush)
 
 			// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
-			if ((xhr.status != 200 && xhr.status != 0) || (!xhr.response || !(xhr.response.byteLength || xhr.response.length))) {
+			if ((xhr.status !== 200 && xhr.status !== 0) || (!xhr.response || !(xhr.response.byteLength || xhr.response.length))) {
 				preloadSuccess(xhr);
 			} else {
 				// Store the downloaded data to IndexedDB cache.
@@ -690,7 +700,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 					cacheRemotePackage(db, url, xhr.response, handler);
 				});
 			}
-		}
+		};
 
 		xhr.send();
 
@@ -708,7 +718,9 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 				readyState: 4,
 				responseURL: url,
 				statusText: "200 OK",
-				getAllResponseHeaders: function() { return "" },
+				getAllResponseHeaders: function(){
+					return '';
+				}
 			};
 		}
 		preloadedXHRs[responseType + '_' + url].startupBlocker = startupBlocker;
@@ -726,7 +738,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 		}
 
 		// Once all XHRs are finished, trigger the page to start running.
-		if (--numPreloadXHRsInFlight == 0) {
+		if (--numPreloadXHRsInFlight === 0) {
 			console.log('All preload XHRs finished!');
 			window.postMessage('preloadXHRsfinished', '*');
 		}
@@ -754,7 +766,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
  * @return {Void}
  */
 function provideRequestAnimationFrameIntegration(){
-	if (!Module['providesRafIntegration']) {
+	if (!Module.providesRafIntegration) {
 
 		// make a reference to the original instance before we hijack it
 		window.realRequestAnimationFrame = window.requestAnimationFrame;
@@ -765,18 +777,18 @@ function provideRequestAnimationFrameIntegration(){
 			// loop handlers for cpu profiler
 			// Note: Module.TOTAL_MEMORY hints if this was Emscripten or not
 			function hookedCb() {
-				if (typeof Module !== 'undefined' && !Module['TOTAL_MEMORY'] && Module['preMainLoop']){
-					Module['preMainLoop']();
+				if (typeof Module !== 'undefined' && !Module.TOTAL_MEMORY && Module.preMainLoop){
+					Module.preMainLoop();
 				}
 				referenceTestPreTick();
 				cb();
 				referenceTestTick();
-				if (typeof Module !== 'undefined' && !Module['TOTAL_MEMORY'] && Module['postMainLoop']){
-					Module['postMainLoop']();
+				if (typeof Module !== 'undefined' && !Module.TOTAL_MEMORY && Module.postMainLoop){
+					Module.postMainLoop();
 				}
 			}
 			window.realRequestAnimationFrame(hookedCb);
-		}
+		};
 
 	}
 }
@@ -804,9 +816,9 @@ function loadReferenceImage(){
 		canvas.height = img.height;
 		var ctx = canvas.getContext('2d');
 		ctx.drawImage(img, 0, 0);
-		Module['referenceImageData'] = ctx.getImageData(0, 0, img.width, img.height).data;
-	}
-	Module['referenceImage'] = img;
+		Module.referenceImageData = ctx.getImageData(0, 0, img.width, img.height).data;
+	};
+	Module.referenceImage = img;
 }
 
 /**
@@ -838,8 +850,8 @@ function doReferenceTest(){
 		canvas = GLctx.canvas;
 	} else if (Module.ctx){
 		canvas = Module.ctx.canvas;
-	} else if (Module['canvas']){
-		canvas = Module['canvas'];
+	} else if (Module.canvas){
+		canvas = Module.canvas;
 	} else {
 		throw 'Cannot find application canvas!';
 	}
@@ -849,14 +861,14 @@ function doReferenceTest(){
 
 	function reftest(){
 		var timeEnd = performance.realNow();
-		var duration = timeEnd - Module['timeStart'];
+		var duration = timeEnd - Module.timeStart;
 		var cpuIdle = (duration - accumulatedCpuTime) / duration;
 		var fps = numFramesToRender * 1000.0 / duration;
 		var wrong = Infinity;
 		var testResult = 'FAIL';
 
 		try {
-			var img = Module['referenceImage'];
+			var img = Module.referenceImage;
 			var div = document.createElement('div');
 
 			var actualCanvas = document.createElement('canvas');
@@ -871,7 +883,7 @@ function doReferenceTest(){
 			var total = 0;
 			var width = img.width;
 			var height = img.height;
-			var expected = Module['referenceImageData'];
+			var expected = Module.referenceImageData;
 
 			// Compute per-pixel error diff.
 			for (var x = 0; x < width; x++){
@@ -971,10 +983,12 @@ function doReferenceTest(){
  */
 function simulateMouseEvent(eventType, x, y, button) {
 
+	var i;
+
 	// Remap from [0,1] to canvas CSS pixel size.
-	x *= Module['canvas'].clientWidth;
-	y *= Module['canvas'].clientHeight;
-	var rect = Module['canvas'].getBoundingClientRect();
+	x *= Module.canvas.clientWidth;
+	y *= Module.canvas.clientHeight;
+	var rect = Module.canvas.getBoundingClientRect();
 	// Offset the injected coordinate from top-left of the client area to the top-left of the canvas.
 	x = Math.round(rect.left + x);
 	y = Math.round(rect.top + y);
@@ -983,20 +997,20 @@ function simulateMouseEvent(eventType, x, y, button) {
 	e.programmatic = true;
 
 	// Dispatch to Emscripten's html5.h API:
-	if (Module['usesEmscriptenHTML5InputAPI'] && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0){
-		for(var i = 0; i < JSEvents.eventHandlers.length; ++i){
-			if ((JSEvents.eventHandlers[i].target == Module['canvas'] || JSEvents.eventHandlers[i].target == window) && JSEvents.eventHandlers[i].eventTypeString == eventType){
+	if (Module.usesEmscriptenHTML5InputAPI && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0){
+		for(i = 0; i < JSEvents.eventHandlers.length; ++i){
+			if ((JSEvents.eventHandlers[i].target == Module.canvas || JSEvents.eventHandlers[i].target == window) && JSEvents.eventHandlers[i].eventTypeString == eventType){
 				JSEvents.eventHandlers[i].handlerFunc(e);
 			}
 		}
-	} else if (!Module['dispatchMouseEventsViaDOM']){
+	} else if (!Module.dispatchMouseEventsViaDOM){
 		// Programmatically reating DOM events doesn't allow specifying offsetX & offsetY properly
 		// for the element, but they must be the same as clientX & clientY. Therefore we can't have a
 		// border that would make these different.
-		if (Module['canvas'].clientWidth != Module['canvas'].offsetWidth || Module['canvas'].clientHeight != Module['canvas'].offsetHeight){
+		if (Module.canvas.clientWidth != Module.canvas.offsetWidth || Module.canvas.clientHeight != Module.canvas.offsetHeight){
 			throw "ERROR! Canvas object must have 0px border for direct mouse dispatch to work!";
 		}
-		for(var i = 0; i < registeredEventListeners.length; ++i){
+		for(i = 0; i < registeredEventListeners.length; ++i){
 			var this_ = registeredEventListeners[i][0];
 			var type = registeredEventListeners[i][1];
 			var listener = registeredEventListeners[i][2];
@@ -1006,7 +1020,7 @@ function simulateMouseEvent(eventType, x, y, button) {
 		}
 	} else {
 		// Dispatch directly to browser
-		Module['canvas'].dispatchEvent(e);
+		Module.canvas.dispatchEvent(e);
 	}
 }
 
@@ -1023,6 +1037,9 @@ function simulateMouseEvent(eventType, x, y, button) {
  * @return {Void}
  */
 function simulateKeyEvent(eventType, keyCode, charCode){
+
+	var i;
+
 	// Don't use the KeyboardEvent object because of http://stackoverflow.com/questions/8942678/keyboardevent-in-chrome-keycode-is-0/12522752#12522752
 	// See also http://output.jsbin.com/awenaq/3
 	//    var e = document.createEvent('KeyboardEvent');
@@ -1042,14 +1059,14 @@ function simulateKeyEvent(eventType, keyCode, charCode){
 	//  }
 
 	// Dispatch directly to Emscripten's html5.h API:
-	if (Module['usesEmscriptenHTML5InputAPI'] && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0){
-		for(var i = 0; i < JSEvents.eventHandlers.length; ++i){
-			if ((JSEvents.eventHandlers[i].target == Module['canvas'] || JSEvents.eventHandlers[i].target == window) && JSEvents.eventHandlers[i].eventTypeString == eventType){
+	if (Module.usesEmscriptenHTML5InputAPI && typeof JSEvents !== 'undefined' && JSEvents.eventHandlers && JSEvents.eventHandlers.length > 0){
+		for(i = 0; i < JSEvents.eventHandlers.length; ++i){
+			if ((JSEvents.eventHandlers[i].target == Module.canvas || JSEvents.eventHandlers[i].target == window) && JSEvents.eventHandlers[i].eventTypeString == eventType){
 				JSEvents.eventHandlers[i].handlerFunc(e);
 			}
 		}
-	} else if (!Module['dispatchKeyEventsViaDOM']){
-		for(var i = 0; i < registeredEventListeners.length; ++i){
+	} else if (!Module.dispatchKeyEventsViaDOM){
+		for(i = 0; i < registeredEventListeners.length; ++i){
 			var this_ = registeredEventListeners[i][0];
 			var type = registeredEventListeners[i][1];
 			var listener = registeredEventListeners[i][2];
@@ -1059,7 +1076,11 @@ function simulateKeyEvent(eventType, keyCode, charCode){
 		}
 	} else {
 		// Dispatch to browser for real
-		Module['canvas'].dispatchEvent ? Module['canvas'].dispatchEvent(e) : Module['canvas'].fireEvent("on" + eventType, e);
+		if (Module.canvas.dispatchEvent){
+			Module.canvas.dispatchEvent(e);
+		} else {
+			Module.canvas.fireEvent('on' + eventType, e);
+		}
 	}
 }
 
@@ -1082,13 +1103,13 @@ function replaceEventListener(obj, this_){
 	obj.addEventListener = function(type, listener, useCapture){
 		ensureNoClientHandlers();
 		if (overriddenMessageTypes.indexOf(type) != -1){
-			var registerListenerToDOM = (type.indexOf('mouse') == -1 || Module['dispatchMouseEventsViaDOM']) && (type.indexOf('key') == -1 || Module['dispatchKeyEventsViaDOM']);
+			var registerListenerToDOM = (type.indexOf('mouse') == -1 || Module.dispatchMouseEventsViaDOM) && (type.indexOf('key') == -1 || Module.dispatchKeyEventsViaDOM);
 			var filteredEventListener = function(e){
 				try {
 					if (e.programmatic || !e.isTrusted){
 						listener(e);
 					}
-				} catch(e) {}
+				} catch(err) {}
 			};
 			if (registerListenerToDOM){
 				realAddEventListener.call(this_ || this, type, filteredEventListener, useCapture);
@@ -1098,7 +1119,7 @@ function replaceEventListener(obj, this_){
 			realAddEventListener.call(this_ || this, type, listener, useCapture);
 			registeredEventListeners.push([this_ || this, type, listener, useCapture]);
 		}
-	}
+	};
 }
 
 /**
@@ -1135,7 +1156,7 @@ function dumpRecordedInputStream(){
 	var div = document.createElement('div');
 	div.innerHTML = '<pre>'+recordedInputStream+'</pre>';
 	document.body.appendChild(div);
-	Module['canvas'].style = 'display: none';
+	Module.canvas.style = 'display: none';
 }
 
 /**
@@ -1181,6 +1202,7 @@ function applyGain(audioInstance, desiredAudioVolume){
  */
 function manageOpenALAudioMasterVolumeForTimedemo(){
 
+	var i;
 	var fadeTime = 90;
 	var silenceTime = 90;
 
@@ -1203,7 +1225,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
 		AL.currentContext.gain.value = desiredAudioVolume;
 	} else {
 		if (typeof AL !== 'undefined' && AL.src){
-			for(var i = 0; i < AL.src.length; ++i){
+			for(i = 0; i < AL.src.length; ++i){
 				var src = AL.src[i];
 				applyGain(src, desiredAudioVolume);
 			}
@@ -1211,7 +1233,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
 	}
 
 	if (typeof WEBAudio !== 'undefined' && WEBAudio.audioInstances){
-		for (var i in WEBAudio.audioInstances){
+		for (i in WEBAudio.audioInstances){
 			var inst = WEBAudio.audioInstances[i];
 			applyGain(inst, desiredAudioVolume);
 		}
@@ -1280,11 +1302,11 @@ function referenceTestTick(){
 
 	// Important! The frame number advances only for those frames that the
 	// game is not waiting for data from the initial network downloads.
-	if (numPreloadXHRsInFlight == 0){
+	if (numPreloadXHRsInFlight === 0){
 
 		// Actual reftest frame count only increments after game has
 		// consumed all the critical XHRs that were to be preloaded.
-		if (numStartupBlockerXHRsPending == 0){
+		if (numStartupBlockerXHRsPending === 0){
 			++referenceTestFrameNumber;
 		}
 
@@ -1293,7 +1315,7 @@ function referenceTestTick(){
 	}
 
 	if (referenceTestFrameNumber == 1){
-		Module['timeStart'] = t1;
+		Module.timeStart = t1;
 		loadReferenceImage();
 		top.postMessage({ msg: 'startGame', key: Module.key }, '*');
 	}
@@ -1349,11 +1371,11 @@ function initializeRuntime(){
  * @return {Array} [x,y]
  */
 function computeNormalizedCanvasPosition(e) {
-	var rect = Module['canvas'].getBoundingClientRect();
+	var rect = Module.canvas.getBoundingClientRect();
 	var x = e.clientX - rect.left;
 	var y = e.clientY - rect.top;
-	var clientWidth = Module['canvas'].clientWidth;
-	var clientHeight = Module['canvas'].clientHeight;
+	var clientWidth = Module.canvas.clientWidth;
+	var clientHeight = Module.canvas.clientHeight;
 	x /= clientWidth;
 	y /= clientHeight;
 	return [x, y];
@@ -1448,9 +1470,11 @@ window.dbInstance = undefined;
 
 window.idbHandler = function(err, db){
 
+	var i;
+
 	if (!!err){
 		isIdbOpen = false;
-		for (var i in idbOpenListeners){
+		for (i in idbOpenListeners){
 			idbOpenListeners[i](null);
 		}
 		idbOpenListeners = [];
@@ -1459,7 +1483,7 @@ window.idbHandler = function(err, db){
 
 	dbInstance = db;
 	isIdbOpen = true;
-	for(var i in idbOpenListeners){
+	for(i in idbOpenListeners){
 		idbOpenListeners[i](db);
 	}
 	idbOpenListeners = [];
@@ -1470,7 +1494,7 @@ window.idbHandler = function(err, db){
 provideRequestAnimationFrameIntegration();
 
 // Hook into XMLHTTPRequest to be able to submit preloaded requests.
-if (Module['injectXMLHttpRequests']){
+if (Module.injectXMLHttpRequests){
 	openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbHandler);
 	XMLHttpRequest = function(){};
 	XMLHttpRequest.prototype = {
@@ -1491,7 +1515,7 @@ if (Module['injectXMLHttpRequests']){
 				var base = document.getElementsByTagName('base');
 				if (base.length > 0 && base[0].href){
 					var baseHref = document.getElementsByTagName('base')[0].href;
-					var xhrKey = this_.responseType_ + '_' + baseHref + this_.url_;
+					xhrKey = this_.responseType_ + '_' + baseHref + this_.url_;
 					if (preloadedXHRs[xhrKey]){
 						this_.xhr_ = preloadedXHRs[xhrKey];
 					}
@@ -1517,7 +1541,7 @@ if (Module['injectXMLHttpRequests']){
 			} else {
 				// To keep the execution coherent for the current set of demos,
 				// kill certain outbound XHRs so they don't stall the run.
-				if (typeof Module['xhrFilter'] === 'function' && Module['xhrFilter'](this.url_)){
+				if (typeof Module.xhrFilter === 'function' && Module.xhrFilter(this.url_)){
 					return;
 				}
 
@@ -1531,14 +1555,14 @@ if (Module['injectXMLHttpRequests']){
 								top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
 							}
 							if (this_.onprogress) this_.onprogress(evt);
-						}
+						};
 						if (this_.responseType_) this_.xhr_.responseType = this_.responseType_;
 						this_.xhr_.open(this_.method_, this_.url_, this_.async_);
 						this_.xhr_.onload = function() {
 							if (preloadXHRProgress[this_.responseType_ + '_' + this_.url_]) preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesLoaded = preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesTotal;
 
 							// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
-							if ((this_.xhr_.status != 200 && this_.xhr_.status != 0) || (!this_.xhr_.response || !(this_.xhr_.response.byteLength || this_.xhr_.response.length))) {
+							if ((this_.xhr_.status !== 200 && this_.xhr_.status !== 0) || (!this_.xhr_.response || !(this_.xhr_.response.byteLength || this_.xhr_.response.length))) {
 								if (this_.onload) this_.onload();
 							} else {
 								// Store the downloaded data to IndexedDB cache.
@@ -1551,7 +1575,7 @@ if (Module['injectXMLHttpRequests']){
 									cacheRemotePackage(db, this_.url_, this_.xhr_.response, handler);
 								});
 							}
-						}
+						};
 						this_.xhr_.send();
 						return;
 					}
@@ -1563,13 +1587,15 @@ if (Module['injectXMLHttpRequests']){
 						readyState: 4,
 						responseURL: this_.url_,
 						statusText: "200 OK",
-						getAllResponseHeaders: function() { return "" },
+						getAllResponseHeaders: function(){
+							return '';
+						}
 					};
 					var len = data.byteLength || data.length;
 					preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
 					top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
 					if (this_.onprogress) {
-						var len = data.byteLength || data.length;
+						len = data.byteLength || data.length;
 						this_.onprogress({ loaded: len, total: len });
 					}
 					if (this_.onreadystatechange) this_.onreadystatechange();
@@ -1628,16 +1654,16 @@ if (injectingInputStream){
 	// Chrome, we detect this via event.isTrusted and know to correctly pass it
 	// through, but to make Safari happy, it's just easier to let resize come
 	// through for those demos that need it.
-	if (!Module['pageNeedsResizeEvent']){
+	if (!Module.pageNeedsResizeEvent){
 		overriddenMessageTypes.push('resize');
 	}
 
 	if (typeof EventTarget !== 'undefined'){
 		replaceEventListener(EventTarget.prototype, null);
 	} else {
-		var eventListenerObjectsToReplace = [window, document, document.body, Module['canvas']];
-		if (Module['extraDomElementsWithEventListeners']){
-			eventListenerObjectsToReplace = eventListenerObjectsToReplace.concat(Module['extraDomElementsWithEventListeners']);
+		var eventListenerObjectsToReplace = [window, document, document.body, Module.canvas];
+		if (Module.extraDomElementsWithEventListeners){
+			eventListenerObjectsToReplace = eventListenerObjectsToReplace.concat(Module.extraDomElementsWithEventListeners);
 		}
 		for(var i = 0; i < eventListenerObjectsToReplace.length; ++i){
 			replaceEventListener(eventListenerObjectsToReplace[i], eventListenerObjectsToReplace[i]);
@@ -1659,26 +1685,26 @@ window.lastFrameTick = -1;
 
 // Inject mouse and keyboard capture event handlers to record input stream.
 if (recordingInputStream){
-	Module['canvas'].addEventListener("mousedown", function(e){
+	Module.canvas.addEventListener('mousedown', function(e){
 		var pos = computeNormalizedCanvasPosition(e);
 		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousedown", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 	});
 
-	Module['canvas'].addEventListener("mouseup", function(e){
+	Module.canvas.addEventListener('mouseup', function(e){
 		var pos = computeNormalizedCanvasPosition(e);
 		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mouseup", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 	});
 
-	Module['canvas'].addEventListener("mousemove", function(e){
+	Module.canvas.addEventListener('mousemove', function(e){
 		var pos = computeNormalizedCanvasPosition(e);
 		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousemove", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 	});
 
-	window.addEventListener("keydown", function(e){
+	window.addEventListener('keydown', function(e){
 		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateKeyEvent("keydown", ' + e.keyCode + ', ' + e.charCode + ');<br>';
 	});
 
-	window.addEventListener("keyup", function(e){
+	window.addEventListener('keyup', function(e){
 		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateKeyEvent("keyup", ' + e.keyCode + ', ' + e.charCode + ');<br>';
 	});
 }
