@@ -1,7 +1,6 @@
 
 /*
  * cpuprofiler.js
- *
  * @author Jukka Jylänki <jjylanki@mozilla.com>
  */
 
