@@ -154,8 +154,13 @@ function createCombinedModule(){
 		pageNeedsResizeEvent: false,
 
 		// specify a fake time scale factor (e.g. how fast time advances)
-		fakeTimeScale: 1.0
+		fakeTimeScale: 1.0,
 
+		// pre-emptively reference test ticks (used by emscripten)
+		referenceTestPreTick: referenceTestPreTick,
+
+		// reference test ticks (used by emscripten)
+		referenceTestTick: referenceTestTick
 	};
 
 	// nothing else to do
@@ -764,9 +769,7 @@ function provideRequestAnimationFrameIntegration(){
 				}
 				referenceTestPreTick();
 				cb();
-				if (typeof Module !== 'undefined' && Module['referenceTestTick']){
-					Module['referenceTestTick']();
-				}
+				referenceTestTick();
 				if (typeof Module !== 'undefined' && !Module['TOTAL_MEMORY'] && Module['postMainLoop']){
 					Module['postMainLoop']();
 				}
@@ -1572,8 +1575,6 @@ var lastFrameDuration = -1;
 
 // Wallclock time for when the previous frame finished.
 var lastFrameTick = -1;
-
-Module['referenceTestTick'] = referenceTestTick;
 
 Module['onRuntimeInitialized'] = function() {
   fakedTime = 0;
