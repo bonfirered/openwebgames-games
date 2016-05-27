@@ -1432,16 +1432,24 @@ function initializeTestSuite(){
 initializeTestSuite();
 
 // dictionary with 'responseType|url' -> finished XHR object mappings.
-var preloadedXHRs = {};
-var preloadXHRProgress = {};
-var numStartupBlockerXHRsPending = 0; // The number of XHRs active that the game needs to load up before the test starts.
-var numPreloadXHRsInFlight = 0; // The number of XHRs still active, via calls from preloadXHR().
+window.preloadedXHRs = {};
+window.preloadXHRProgress = {};
+
+// The number of XHRs active that the game needs to load up before the test starts.
+window.numStartupBlockerXHRsPending = 0;
+
+// The number of XHRs still active, via calls from preloadXHR().
+window.numPreloadXHRsInFlight = 0;
 
 // Async operations that are waiting for the IndexedDB to become available.
 idbOpenListeners = [];
-var isIdbOpen = undefined; // undefined = not yet tried, false = tried but failed to open, true = available
-var dbInstance = undefined;
-var idbHandler = function(err, db){
+
+// undefined = not yet tried, false = tried but failed to open, true = available
+window.isIdbOpen = undefined;
+
+window.dbInstance = undefined;
+
+window.idbHandler = function(err, db){
 
 	if (!!err){
 		isIdbOpen = false;
@@ -1465,203 +1473,233 @@ var idbHandler = function(err, db){
 provideRequestAnimationFrameIntegration();
 
 // Hook into XMLHTTPRequest to be able to submit preloaded requests.
-if (Module['injectXMLHttpRequests']) {
+if (Module['injectXMLHttpRequests']){
 	openDatabase(Module.xhrCacheName || 'xhrCache', Module.xhrCacheVersion || 2, idbHandler);
-  XMLHttpRequest = function() {}
-  XMLHttpRequest.prototype = {
-    open: function(method, url, async) {
-      // Don't yet do anything except store the params, since we don't know
-      // whether we need to open a real XHR, or if we have a cached one waiting
-      // (need the .responseType field for this)
-      this.url_ = url;
-      this.method_ = method;
-      this.async_ = async;
-    },
+	XMLHttpRequest = function(){};
+	XMLHttpRequest.prototype = {
+		open: function(method, url, async){
+			// Don't yet do anything except store the params, since we don't know
+			// whether we need to open a real XHR, or if we have a cached one waiting
+			// (need the .responseType field for this)
+			this.url_ = url;
+			this.method_ = method;
+			this.async_ = async;
+		},
 
-    send: function(data) {
-      var this_ = this;
-      var xhrKey = this_.responseType_ + '_' + this_.url_;
-      this_.xhr_ = preloadedXHRs[xhrKey];
-      if (!this.xhr_) {
-        var base = document.getElementsByTagName('base');
-        if (base.length > 0 && base[0].href) {
-          var baseHref = document.getElementsByTagName('base')[0].href;
-          var xhrKey = this_.responseType_ + '_' + baseHref + this_.url_;
-          if (preloadedXHRs[xhrKey]) this_.xhr_ = preloadedXHRs[xhrKey];
-        }
-      }
-
-      if (this.xhr_) {
-        // This particular XHR URL has been downloaded up front. Serve the preloaded one.
-        setTimeout(function() {
-          if (this_.onprogress) this_.onprogress({ loaded: this_.response.length, total: this_.response.length });
-          if (this_.onload) this_.onload();
-
-          // Free up reference to this XHR to not leave behind used memory.
-          try {
-            if (preloadedXHRs[xhrKey].startupBlocker) --numStartupBlockerXHRsPending;
-            delete preloadedXHRs[xhrKey];
-          } catch(e) {}
-        }, 1);
-      } else {
-        // To keep the execution coherent for the current set of demos, kill certain outbound XHRs so they don't stall the run.
-        if (typeof Module['xhrFilter'] === 'function' && Module['xhrFilter'](this.url_)) return;
-
-		var handler = function(err, data){
-
-			if (!!err){
-				// The XHR has not been cached up in advance. Log a trace and do it now on demand.
-				this_.xhr_ = new realXMLHttpRequest();
-				this_.xhr_.onprogress = function(evt) {
-					if (evt.lengthComputable) {
-						preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
-						top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+		send: function(data){
+			var this_ = this;
+			var xhrKey = this_.responseType_ + '_' + this_.url_;
+			this_.xhr_ = preloadedXHRs[xhrKey];
+			if (!this.xhr_){
+				var base = document.getElementsByTagName('base');
+				if (base.length > 0 && base[0].href){
+					var baseHref = document.getElementsByTagName('base')[0].href;
+					var xhrKey = this_.responseType_ + '_' + baseHref + this_.url_;
+					if (preloadedXHRs[xhrKey]){
+						this_.xhr_ = preloadedXHRs[xhrKey];
 					}
-					if (this_.onprogress) this_.onprogress(evt);
 				}
-				if (this_.responseType_) this_.xhr_.responseType = this_.responseType_;
-				this_.xhr_.open(this_.method_, this_.url_, this_.async_);
-				this_.xhr_.onload = function() {
-					if (preloadXHRProgress[this_.responseType_ + '_' + this_.url_]) preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesLoaded = preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesTotal;
+			}
 
-					// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
-					if ((this_.xhr_.status != 200 && this_.xhr_.status != 0) || (!this_.xhr_.response || !(this_.xhr_.response.byteLength || this_.xhr_.response.length))) {
-						if (this_.onload) this_.onload();
-					} else {
-						// Store the downloaded data to IndexedDB cache.
-						var handler = function(){
-							if (this_.onload){
-								this_.onload();
+			if (this.xhr_){
+				// This particular XHR URL has been downloaded up front. Serve the preloaded one.
+				setTimeout(function(){
+					if (this_.onprogress){
+						this_.onprogress({ loaded: this_.response.length, total: this_.response.length });
+					}
+					if (this_.onload){
+						this_.onload();
+					}
+
+					// Free up reference to this XHR to not leave behind used memory.
+					try {
+						if (preloadedXHRs[xhrKey].startupBlocker) --numStartupBlockerXHRsPending;
+						delete preloadedXHRs[xhrKey];
+					} catch(e) {}
+				}, 1);
+			} else {
+				// To keep the execution coherent for the current set of demos,
+				// kill certain outbound XHRs so they don't stall the run.
+				if (typeof Module['xhrFilter'] === 'function' && Module['xhrFilter'](this.url_)){
+					return;
+				}
+
+				var handler = function(err, data){
+					if (!!err){
+						// The XHR has not been cached up in advance. Log a trace and do it now on demand.
+						this_.xhr_ = new realXMLHttpRequest();
+						this_.xhr_.onprogress = function(evt) {
+							if (evt.lengthComputable) {
+								preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
+								top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
 							}
-						};
-						withIndexedDb(function(db) {
-							cacheRemotePackage(db, this_.url_, this_.xhr_.response, handler);
-						});
+							if (this_.onprogress) this_.onprogress(evt);
+						}
+						if (this_.responseType_) this_.xhr_.responseType = this_.responseType_;
+						this_.xhr_.open(this_.method_, this_.url_, this_.async_);
+						this_.xhr_.onload = function() {
+							if (preloadXHRProgress[this_.responseType_ + '_' + this_.url_]) preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesLoaded = preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesTotal;
+
+							// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
+							if ((this_.xhr_.status != 200 && this_.xhr_.status != 0) || (!this_.xhr_.response || !(this_.xhr_.response.byteLength || this_.xhr_.response.length))) {
+								if (this_.onload) this_.onload();
+							} else {
+								// Store the downloaded data to IndexedDB cache.
+								var handler = function(){
+									if (this_.onload){
+										this_.onload();
+									}
+								};
+								withIndexedDb(function(db) {
+									cacheRemotePackage(db, this_.url_, this_.xhr_.response, handler);
+								});
+							}
+						}
+						this_.xhr_.send();
+						return;
 					}
-				}
-				this_.xhr_.send();
-				return;
+
+					this_.xhr_ = {
+						response: data,
+						responseText: data,
+						status: 200,
+						readyState: 4,
+						responseURL: this_.url_,
+						statusText: "200 OK",
+						getAllResponseHeaders: function() { return "" },
+					};
+					var len = data.byteLength || data.length;
+					preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
+					top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+					if (this_.onprogress) {
+						var len = data.byteLength || data.length;
+						this_.onprogress({ loaded: len, total: len });
+					}
+					if (this_.onreadystatechange) this_.onreadystatechange();
+					if (this_.onload) this_.onload();
+
+				};
+
+				withIndexedDb(function(db){
+					fetchCachedPackage(db, this_.url_, handler);
+				});
 			}
-
-			this_.xhr_ = {
-				response: data,
-				responseText: data,
-				status: 200,
-				readyState: 4,
-				responseURL: this_.url_,
-				statusText: "200 OK",
-				getAllResponseHeaders: function() { return "" },
-			};
-			var len = data.byteLength || data.length;
-			preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
-			top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
-			if (this_.onprogress) {
-				var len = data.byteLength || data.length;
-				this_.onprogress({ loaded: len, total: len });
-			}
-			if (this_.onreadystatechange) this_.onreadystatechange();
-			if (this_.onload) this_.onload();
-
-		};
-
-        withIndexedDb(function(db) {
-          fetchCachedPackage(db, this_.url_, handler);
-        });
-      }
-    },
-
-    getAllResponseHeaders: function() { return this.xhr_.getAllResponseHeaders(); },
-    setRequestHeader: function(h, v) { },
-    addEventListener: function(s, f) { console.log(s); },
-    get response() { return this.xhr_.response; },
-    get responseText() { return this.xhr_.responseText; },
-    get responseXML() { return this.xhr_.responseXML; },
-    get responseType() { return this.responseType_; },
-    set responseType(x) { this.responseType_ = x; },
-    get status() { return this.xhr_.status; },
-    get statusText() { return this.xhr_.statusText; },
-    get timeout() { return this.xhr_.timeout; }
-  };
+		},
+		getAllResponseHeaders: function(){
+			return this.xhr_.getAllResponseHeaders();
+		},
+		setRequestHeader: function(h, v){
+			return;
+		},
+		addEventListener: function(s, f){
+			console.log(s);
+		},
+		get response(){
+			return this.xhr_.response;
+		},
+		get responseText(){
+			return this.xhr_.responseText;
+		},
+		get responseXML(){
+			return this.xhr_.responseXML;
+		},
+		get responseType(){
+			return this.responseType_;
+		},
+		set responseType(x){
+			this.responseType_ = x;
+		},
+		get status(){
+			return this.xhr_.status;
+		},
+		get statusText(){
+			return this.xhr_.statusText;
+		},
+		get timeout(){
+			return this.xhr_.timeout;
+		}
+	};
 }
 
-if (injectingInputStream) {
-  // Filter the page event handlers to only pass programmatically generated events to the site - all real user input needs to be discarded since we are
-  // doing a programmatic run.
-  var overriddenMessageTypes = ['mousedown', 'mouseup', 'mousemove',
-    'click', 'dblclick', 'keydown', 'keypress', 'keyup',
-    'pointerlockchange', 'pointerlockerror', 'webkitpointerlockchange', 'webkitpointerlockerror', 'mozpointerlockchange', 'mozpointerlockerror', 'mspointerlockchange', 'mspointerlockerror', 'opointerlockchange', 'opointerlockerror',
-    'devicemotion', 'deviceorientation',
-    'mousewheel', 'wheel', 'WheelEvent', 'DOMMouseScroll', 'contextmenu',
-    'blur', 'focus', 'beforeunload', 'unload', 'error',
-    'touchstart', 'touchmove', 'touchend',
-    'mouseout', 'pointerout', 'pointerdown', 'pointermove', 'pointerup', 'transitionend'];
+if (injectingInputStream){
+	// Filter the page event handlers to only pass programmatically generated
+	// events to the site - all real user input needs to be discarded since we
+	// are doing a programmatic run.
+	window.overriddenMessageTypes = ['mousedown', 'mouseup', 'mousemove', 'click', 'dblclick', 'keydown', 'keypress', 'keyup', 'pointerlockchange', 'pointerlockerror', 'webkitpointerlockchange', 'webkitpointerlockerror', 'mozpointerlockchange', 'mozpointerlockerror', 'mspointerlockchange', 'mspointerlockerror', 'opointerlockchange', 'opointerlockerror', 'devicemotion', 'deviceorientation', 'mousewheel', 'wheel', 'WheelEvent', 'DOMMouseScroll', 'contextmenu', 'blur', 'focus', 'beforeunload', 'unload', 'error', 'touchstart', 'touchmove', 'touchend', 'mouseout', 'pointerout', 'pointerdown', 'pointermove', 'pointerup', 'transitionend'];
 
-  // Some game demos programmatically fire the resize event. For Firefox and Chrome, we detect this via event.isTrusted and know to correctly pass it through, but to make Safari happy,
-  // it's just easier to let resize come through for those demos that need it.
-  if (!Module['pageNeedsResizeEvent']) overriddenMessageTypes.push('resize');
+	// Some game demos programmatically fire the resize event. For Firefox and
+	// Chrome, we detect this via event.isTrusted and know to correctly pass it
+	// through, but to make Safari happy, it's just easier to let resize come
+	// through for those demos that need it.
+	if (!Module['pageNeedsResizeEvent']){
+		overriddenMessageTypes.push('resize');
+	}
 
-  if (typeof EventTarget !== 'undefined') {
-    replaceEventListener(EventTarget.prototype, null);
-  } else {
-    var eventListenerObjectsToReplace = [window, document, document.body, Module['canvas']];
-    if (Module['extraDomElementsWithEventListeners']) eventListenerObjectsToReplace = eventListenerObjectsToReplace.concat(Module['extraDomElementsWithEventListeners']);
-    for(var i = 0; i < eventListenerObjectsToReplace.length; ++i) {
-      replaceEventListener(eventListenerObjectsToReplace[i], eventListenerObjectsToReplace[i]);
-    }
-  }
+	if (typeof EventTarget !== 'undefined'){
+		replaceEventListener(EventTarget.prototype, null);
+	} else {
+		var eventListenerObjectsToReplace = [window, document, document.body, Module['canvas']];
+		if (Module['extraDomElementsWithEventListeners']){
+			eventListenerObjectsToReplace = eventListenerObjectsToReplace.concat(Module['extraDomElementsWithEventListeners']);
+		}
+		for(var i = 0; i < eventListenerObjectsToReplace.length; ++i){
+			replaceEventListener(eventListenerObjectsToReplace[i], eventListenerObjectsToReplace[i]);
+		}
+	}
 }
 
 // Wallclock time for when we started CPU execution of the current frame.
-var referenceTestT0 = 0;
+window.referenceTestT0 = 0;
 
 // Captures the whole input stream as a JavaScript formatted code.
-var recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
+window.recordedInputStream = 'function injectInputStream(referenceTestFrameNumber) { <br>';
 
 // Holds the amount of time in msecs that the previously rendered frame took. Used to estimate when a stutter event occurs (fast frame followed by a slow frame)
-var lastFrameDuration = -1;
+window.lastFrameDuration = -1;
 
 // Wallclock time for when the previous frame finished.
-var lastFrameTick = -1;
+window.lastFrameTick = -1;
 
 // Inject mouse and keyboard capture event handlers to record input stream.
-if (recordingInputStream) {
-  Module['canvas'].addEventListener("mousedown", function(e) {
-    var pos = computeNormalizedCanvasPosition(e);
-    recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousedown", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
-    });
+if (recordingInputStream){
+	Module['canvas'].addEventListener("mousedown", function(e){
+		var pos = computeNormalizedCanvasPosition(e);
+		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousedown", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+	});
 
-  Module['canvas'].addEventListener("mouseup", function(e) {
-    var pos = computeNormalizedCanvasPosition(e);
-    recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mouseup", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
-    });
+	Module['canvas'].addEventListener("mouseup", function(e){
+		var pos = computeNormalizedCanvasPosition(e);
+		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mouseup", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+	});
 
-  Module['canvas'].addEventListener("mousemove", function(e) {
-    var pos = computeNormalizedCanvasPosition(e);
-    recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousemove", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
-    });
+	Module['canvas'].addEventListener("mousemove", function(e){
+		var pos = computeNormalizedCanvasPosition(e);
+		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousemove", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+	});
 
-  window.addEventListener("keydown", function(e) {
-    recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateKeyEvent("keydown", ' + e.keyCode + ', ' + e.charCode + ');<br>';
-    });
+	window.addEventListener("keydown", function(e){
+		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateKeyEvent("keydown", ' + e.keyCode + ', ' + e.charCode + ');<br>';
+	});
 
-  window.addEventListener("keyup", function(e) {
-    recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateKeyEvent("keyup", ' + e.keyCode + ', ' + e.charCode + ');<br>';
-    });
-
+	window.addEventListener("keyup", function(e){
+		recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateKeyEvent("keyup", ' + e.keyCode + ', ' + e.charCode + ');<br>';
+	});
 }
 
-// Hide a few Emscripten-specific page elements from the default shell to remove unwanted interactivity options.
-if (injectingInputStream || recordingInputStream) {
-  var elems = document.getElementsByClassName('fullscreen');
-  for(var i in elems) {
-    var e = elems[i];
-    e.style = 'display:none';
-  }
-  var output = document.getElementById('output');
-  if (output)
-    output.style = 'display:none';
+// Hide a few Emscripten-specific page elements from the default shell to
+// remove unwanted interactivity options.
+if (injectingInputStream || recordingInputStream){
+	var elems = document.getElementsByClassName('fullscreen');
+	for(var i in elems){
+		var e = elems[i];
+		e.style = 'display:none';
+	}
+	var output = document.getElementById('output');
+	if (output){
+		output.style = 'display:none';
+	}
 }
 
 // Page load starts now.
-var pageStartupT0 = performance.realNow();
+window.pageStartupT0 = performance.realNow();
 
