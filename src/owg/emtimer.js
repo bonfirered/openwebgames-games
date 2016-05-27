@@ -631,14 +631,14 @@ function cacheRemotePackage(db, packageName, packageData, cb) {
  *
  * @depends window.isIdbOpen
  * @depends window.idbOpenListeners
- * @depends dbInstance
+ * @depends window.dbInstance
  *
  * @param {Function} func
  * @return {Void}
  */
 function withIndexedDb(func){
 	if (window.isIdbOpen !== undefined){
-		func(dbInstance);
+		func(window.dbInstance);
 	} else {
 		window.idbOpenListeners.push(func);
 	}
@@ -655,8 +655,8 @@ function withIndexedDb(func){
 function clearIndexedDbCache(dbName, cb){
 
 	// close db
-	if (dbInstance){
-		dbInstance.close();
+	if (window.dbInstance){
+		window.dbInstance.close();
 	}
 
 	// delete database
@@ -1528,7 +1528,7 @@ function initializeTestSuite(){
 			return;
 		}
 
-		dbInstance = db;
+		window.dbInstance = db;
 		window.isIdbOpen = true;
 		for(i in window.idbOpenListeners){
 			window.idbOpenListeners[i](db);
