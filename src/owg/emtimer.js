@@ -65,7 +65,7 @@ function onGameError(msg, url, line, column, err){
 	if (msg === 'uncaught exception: exit'){
 
 		var timeEnd		= performance.realNow(),
-			duration	= timeEnd - Module['timeStart'],
+			duration	= timeEnd - ModuletimeStart,
 			cpuIdle		= (duration - accumulatedCpuTime) / duration,
 			fps			= numFramesToRender * 1000.0 / duration;
 
@@ -319,15 +319,15 @@ function getPreloadProgress(){
 		}
 	}
 
-	if (Module['demoAssetSizeInBytes']){
-		if (bytesTotal > Module['demoAssetSizeInBytes']){
-			console.error('Game downloaded ' + bytesTotal + ' bytes, expected demo size was only ' + Module['demoAssetSizeInBytes'] + '!');
-			Module['demoAssetSizeInBytes'] = bytesTotal;
+	if (Module.demoAssetSizeInBytes){
+		if (bytesTotal > Module.demoAssetSizeInBytes){
+			console.error('Game downloaded ' + bytesTotal + ' bytes, expected demo size was only ' + Module.demoAssetSizeInBytes + '!');
+			Module.demoAssetSizeInBytes = bytesTotal;
 		}
-		bytesTotal = Module['demoAssetSizeInBytes'];
+		bytesTotal = Module.demoAssetSizeInBytes;
 	}
 
-	if (bytesTotal == 0){
+	if (bytesTotal === 0){
 		return 1.0;
 	}
 
@@ -345,29 +345,26 @@ function getPreloadProgress(){
  * @param {Function} cb(err, result)
  */
 function openDatabase(name, version, cb){
-
 	try {
 		var req = realIndexedDB.open(name, version);
+		req.onupgradeneeded = function(evt){
+			var db = evt.target.result;
+			if (db.objectStoreNames.contains('FILES')){
+				db.deleteObjectStore('FILES');
+			}
+			db.createObjectStore('FILES');
+		};
+
+		req.onsuccess = function(evt){
+			cb(null, evt.target.result);
+		};
+
+		req.onerror = function(err){
+			cb(err);
+		};
 	} catch(e){
 		return cb(e);
 	}
-
-	req.onupgradeneeded = function(evt){
-		var db = evt.target.result;
-		if (db.objectStoreNames.contains('FILES')){
-			db.deleteObjectStore('FILES');
-		}
-		db.createObjectStore('FILES');
-	};
-
-	req.onsuccess = function(evt){
-		cb(null, evt.target.result);
-	};
-
-	req.onerror = function(err){
-		cb(err);
-	};
-
 }
 
 /**
