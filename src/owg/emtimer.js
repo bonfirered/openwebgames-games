@@ -630,7 +630,7 @@ function cacheRemotePackage(db, packageName, packageData, cb) {
  * run function once IndexedDB is open
  *
  * @depends window.isIdbOpen
- * @depends idbOpenListeners
+ * @depends window.idbOpenListeners
  * @depends dbInstance
  *
  * @param {Function} func
@@ -640,7 +640,7 @@ function withIndexedDb(func){
 	if (window.isIdbOpen !== undefined){
 		func(dbInstance);
 	} else {
-		idbOpenListeners.push(func);
+		window.idbOpenListeners.push(func);
 	}
 }
 
@@ -1510,7 +1510,7 @@ function initializeTestSuite(){
 	window.numPreloadXHRsInFlight = 0;
 
 	// Async operations that are waiting for the IndexedDB to become available.
-	idbOpenListeners = [];
+	window.idbOpenListeners = [];
 
 	// undefined = not yet tried, false = tried but failed to open, true = available
 	window.isIdbOpen = undefined;
@@ -1521,19 +1521,19 @@ function initializeTestSuite(){
 
 		if (!!err){
 			window.isIdbOpen = false;
-			for (i in idbOpenListeners){
-				idbOpenListeners[i](null);
+			for (i in window.idbOpenListeners){
+				window.idbOpenListeners[i](null);
 			}
-			idbOpenListeners = [];
+			window.idbOpenListeners = [];
 			return;
 		}
 
 		dbInstance = db;
 		window.isIdbOpen = true;
-		for(i in idbOpenListeners){
-			idbOpenListeners[i](db);
+		for(i in window.idbOpenListeners){
+			window.idbOpenListeners[i](db);
 		}
-		idbOpenListeners = [];
+		window.idbOpenListeners = [];
 
 	};
 
