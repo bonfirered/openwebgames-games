@@ -29,7 +29,7 @@ function isInsideIframe(){
  * @depends Module.key
  * @depends window.accumulatedCpuTime
  * @depends window.numFramesToRender
- * @depends pageLoadTime
+ * @depends window.pageLoadTime
  * @depends top.postMessage
  *
  * @param {String} msg
@@ -76,7 +76,7 @@ function onGameError(msg, url, line, column, err){
 			cpuTime				: Math.round(window.accumulatedCpuTime),
 			cpuIdle				: cpuIdle,
 			fps					: fps,
-			pageLoadTime		: pageLoadTime,
+			pageLoadTime		: window.pageLoadTime,
 			numStutterEvents	: 0
 		};
 
@@ -832,7 +832,7 @@ function loadReferenceImage(){
  * @depends window.numFramesToRender
  * @depends Module.referenceImage
  * @depends Module.referenceImageData
- * @depends pageLoadTime
+ * @depends window.pageLoadTime
  * @depends numStutterEvents
  * @depends Module.key
  * @depends top.postMessage
@@ -934,7 +934,7 @@ function doReferenceTest(){
 			cpuTime: Math.round(window.accumulatedCpuTime),
 			cpuIdle: cpuIdle,
 			fps: fps,
-			pageLoadTime: pageLoadTime,
+			pageLoadTime: window.pageLoadTime,
 			numStutterEvents: numStutterEvents
 		};
 		console.log('reftest finished, diff: ' + wrong);
@@ -1129,7 +1129,7 @@ function replaceEventListener(obj, this_){
  * @depends referenceTestPreTickCalledCount
  * @depends performance.realNow
  * @depends referenceTestT0 *
- * @depends pageLoadTime
+ * @depends window.pageLoadTime
  * @depends pageStartupT0
  *
  * @param {Void}
@@ -1138,8 +1138,8 @@ function replaceEventListener(obj, this_){
 function referenceTestPreTick(){
 	++referenceTestPreTickCalledCount;
 	referenceTestT0 = performance.realNow();
-	if (pageLoadTime === null){
-		pageLoadTime = performance.realNow() - pageStartupT0;
+	if (window.pageLoadTime === null){
+		window.pageLoadTime = performance.realNow() - pageStartupT0;
 	}
 }
 
