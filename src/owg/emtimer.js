@@ -160,7 +160,11 @@ function createCombinedModule(){
 		referenceTestPreTick: referenceTestPreTick,
 
 		// reference test ticks (used by emscripten)
-		referenceTestTick: referenceTestTick
+		referenceTestTick: referenceTestTick,
+
+		// trigger when emscripten main() has been called
+		onRuntimeInitialized: initializeRuntime
+
 	};
 
 	// nothing else to do
@@ -1316,6 +1320,27 @@ function referenceTestTick(){
 }
 
 /**
+ * initialize emscripten runtime
+ *
+ * @depends fakeTime
+ * @depends referenceTestFrameNumber
+ * @depends runtimeInitialized
+ *
+ * Note: Calling this reports that main() has been called.
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function initializeRuntime(){
+	fakedTime = 0;
+	referenceTestFrameNumber = 0;
+	runtimeInitialized = 1;
+	if (typeof cpuprofiler_add_hooks !== 'undefined' && location.search.indexOf('cpuprofiler') != -1){
+		cpuprofiler_add_hooks();
+	}
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1575,13 +1600,6 @@ var lastFrameDuration = -1;
 
 // Wallclock time for when the previous frame finished.
 var lastFrameTick = -1;
-
-Module['onRuntimeInitialized'] = function() {
-  fakedTime = 0;
-  referenceTestFrameNumber = 0;
-  runtimeInitialized = 1;
-  if (typeof cpuprofiler_add_hooks !== 'undefined' && location.search.indexOf('cpuprofiler') != -1) cpuprofiler_add_hooks();
-}
 
 // Maps mouse coordinate from canvas CSS pixels to normalized [0,1] range. In y coordinate y grows downwards.
 function computeNormalizedCanvasPos(e) {
