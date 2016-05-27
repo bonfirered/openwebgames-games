@@ -330,6 +330,7 @@ function getNumFramesToRender(){
  * @depends window.registeredEventListeners
  * @depends window.realXMLHttpRequest
  * @depends window.realAddEventListener
+ * @depends window.numPreloadXHRsInFlight
  *
  * @param {Void}
  * @return {Void}
@@ -347,7 +348,7 @@ function unloadAllEventHandlers(){
 
 	// prepare xhrs for reuse
 	window.preloadedXHRs = {};
-	numPreloadXHRsInFlight = 0;
+	window.numPreloadXHRsInFlight = 0;
 	XMLHttpRequest = window.realXMLHttpRequest;
 
 	// remove page unload events
@@ -707,7 +708,7 @@ function loadXHR(url, responseType, onload, startupBlocker){
  * @depends window.preloadXHRProgress
  * @depends window.postMessage
  * @depends window.preloadedXHRs
- * @depends numPreloadXHRsInFlight
+ * @depends window.numPreloadXHRsInFlight
  *
  * @param {String} url
  * @param {String} responseType
@@ -723,7 +724,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 	}
 
 	// Used to detect when the last preload XHR has finished and the game loading can start.
-	++numPreloadXHRsInFlight;
+	++window.numPreloadXHRsInFlight;
 
 	// tell test suite
 	postPreloadGame();
@@ -795,7 +796,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 		}
 
 		// Once all XHRs are finished, trigger the page to start running.
-		if (--numPreloadXHRsInFlight === 0) {
+		if (--window.numPreloadXHRsInFlight === 0) {
 			// @todo: refactor all of this, as it is ONLY being used for Heroes of Paragon
 			window.postMessage('preloadXHRsfinished', '*');
 		}
@@ -1310,7 +1311,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends window.referenceTestFrameNumber
  * @depends lastFrameDuration
  * @depends numStutterEvents
- * @depends numPreloadXHRsInFlight
+ * @depends window.numPreloadXHRsInFlight
  * @depends window.numStartupBlockerXHRsPending
  * @depends window.fakedTime
  * @depends Module.timeStart
@@ -1352,7 +1353,7 @@ function referenceTestTick(){
 
 	// Important! The frame number advances only for those frames that the
 	// game is not waiting for data from the initial network downloads.
-	if (numPreloadXHRsInFlight === 0){
+	if (window.numPreloadXHRsInFlight === 0){
 
 		// Actual reftest frame count only increments after game has
 		// consumed all the critical XHRs that were to be preloaded.
