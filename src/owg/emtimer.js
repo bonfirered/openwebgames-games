@@ -103,7 +103,7 @@ function onGameError(msg, url, line, column, err){
  * @param {Void}
  * @return {Object}
  */
-function createCombinedModule(){
+function createModule(){
 
 	var module = {
 
@@ -1392,11 +1392,11 @@ function initializeTestSuite(){
 
 	var i;
 
-	// capture game errors
+	// intercept all game errors
 	window.onerror = onGameError;
 
-	// create/re-create game module
-	window.Module = createCombinedModule();
+	// create a valid game Module object
+	window.Module = createModule();
 
 	// test if page is recording input stream
 	window.recordingInputStream = isRecordingInputStream();
