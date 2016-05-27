@@ -401,7 +401,7 @@ function getPreloadProgress(){
 /**
  * open an IndexedDB database
  *
- * @depends realIndexedDB
+ * @depends window.realIndexedDB
  *
  * @param {String} name
  * @param {Float} version
@@ -409,7 +409,7 @@ function getPreloadProgress(){
  */
 function openDatabase(name, version, cb){
 	try {
-		var req = realIndexedDB.open(name, version);
+		var req = window.realIndexedDB.open(name, version);
 		req.onupgradeneeded = function(evt){
 			var db = evt.target.result;
 			if (db.objectStoreNames.contains('FILES')){
@@ -629,7 +629,7 @@ function cacheRemotePackage(db, packageName, packageData, cb) {
 /**
  * run function once IndexedDB is open
  *
- * @depends isIdbOpen
+ * @depends window.isIdbOpen
  * @depends idbOpenListeners
  * @depends dbInstance
  *
@@ -637,7 +637,7 @@ function cacheRemotePackage(db, packageName, packageData, cb) {
  * @return {Void}
  */
 function withIndexedDb(func){
-	if (isIdbOpen !== undefined){
+	if (window.isIdbOpen !== undefined){
 		func(dbInstance);
 	} else {
 		idbOpenListeners.push(func);
@@ -646,6 +646,8 @@ function withIndexedDb(func){
 
 /**
  * Clear indexedDB Cache
+ *
+ * @depends window.realIndexedDB
  *
  * @param {String} dbName
  * @param {Function} cb(err, dbName)
@@ -658,7 +660,7 @@ function clearIndexedDbCache(dbName, cb){
 	}
 
 	// delete database
-	var result = realIndexedDB.deleteDatabase(dbName);
+	var result = window.realIndexedDB.deleteDatabase(dbName);
 
 	result.onsuccess = function(){
 		cb(null, dbName);
@@ -1518,7 +1520,7 @@ function initializeTestSuite(){
 	window.idbHandler = function(err, db){
 
 		if (!!err){
-			isIdbOpen = false;
+			window.isIdbOpen = false;
 			for (i in idbOpenListeners){
 				idbOpenListeners[i](null);
 			}
@@ -1527,7 +1529,7 @@ function initializeTestSuite(){
 		}
 
 		dbInstance = db;
-		isIdbOpen = true;
+		window.isIdbOpen = true;
 		for(i in idbOpenListeners){
 			idbOpenListeners[i](db);
 		}
