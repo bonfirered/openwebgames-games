@@ -1177,7 +1177,7 @@ function replaceEventListener(obj, this_){
 /**
  * pre-emptively track ticks to prevent tick counter recursions
  *
- * @depends referenceTestPreTickCalledCount
+ * @depends window.referenceTestPreTickCalledCount
  * @depends performance.realNow
  * @depends referenceTestT0 *
  * @depends window.pageLoadTime
@@ -1187,7 +1187,7 @@ function replaceEventListener(obj, this_){
  * @return {Void}
  */
 function referenceTestPreTick(){
-	++referenceTestPreTickCalledCount;
+	++window.referenceTestPreTickCalledCount;
 	referenceTestT0 = performance.realNow();
 	if (window.pageLoadTime === null){
 		window.pageLoadTime = performance.realNow() - pageStartupT0;
@@ -1302,7 +1302,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
 /**
  * track frame ticks
  *
- * @depends referenceTestPreTickCalledCount
+ * @depends window.referenceTestPreTickCalledCount
  * @depends window.runtimeInitialized
  * @depends performance.realNow
  * @depends window.accumulatedCpuTime
@@ -1325,10 +1325,10 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  */
 function referenceTestTick(){
 
-	--referenceTestPreTickCalledCount;
+	--window.referenceTestPreTickCalledCount;
 
 	// We are being called recursively, so ignore this call.
-	if (referenceTestPreTickCalledCount > 0){
+	if (window.referenceTestPreTickCalledCount > 0){
 		return;
 	}
 
