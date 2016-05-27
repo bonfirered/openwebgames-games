@@ -363,7 +363,7 @@ function unloadAllEventHandlers(){
 /**
  * get current preloaded progress value (0 to 1)
  *
- * @depends preloadXHRProgress
+ * @depends window.preloadXHRProgress
  * @depends Module.demoAssetSizeInBytes
  *
  * @param {Void}
@@ -374,8 +374,8 @@ function getPreloadProgress(){
 	var bytesLoaded = 0;
 	var bytesTotal = 0;
 
-	for(var i in preloadXHRProgress){
-		var x = preloadXHRProgress[i];
+	for(var i in window.preloadXHRProgress){
+		var x = window.preloadXHRProgress[i];
 		if (x.bytesTotal > 0){
 			bytesLoaded += x.bytesLoaded;
 			bytesTotal += x.bytesTotal;
@@ -702,7 +702,7 @@ function loadXHR(url, responseType, onload, startupBlocker){
  * @depends numStartupBlockerXHRsPending
  * @depends Module.key
  * @depends window.realXMLHttpRequest
- * @depends preloadXHRProgress
+ * @depends window.preloadXHRProgress
  * @depends window.postMessage
  * @depends finish() // @TODO: This function does not exist anywhere, should it be onload?
  * @depends preloadedXHRs
@@ -735,7 +735,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 
 		xhr.onprogress = function(evt) {
 			if (evt.lengthComputable) {
-				preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
+				window.preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
 				postPreloadGameProgress(getPreloadProgress());
 			}
 		};
@@ -782,7 +782,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 		preloadedXHRs[responseType + '_' + url].startupBlocker = startupBlocker;
 
 		var len = preloadedXHRs[responseType + '_' + url].response.byteLength || preloadedXHRs[responseType + '_' + url].response.length;
-		preloadXHRProgress[responseType + '_' + url] = {
+		window.preloadXHRProgress[responseType + '_' + url] = {
 			bytesLoaded: len,
 			bytesTotal: len
 		};
@@ -1596,7 +1596,7 @@ function initializeTestSuite(){
 							this_.xhr_ = new window.realXMLHttpRequest();
 							this_.xhr_.onprogress = function(evt) {
 								if (evt.lengthComputable) {
-									preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
+									window.preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
 									postPreloadGameProgress(getPreloadProgress());
 								}
 								if (this_.onprogress) this_.onprogress(evt);
@@ -1604,7 +1604,9 @@ function initializeTestSuite(){
 							if (this_.responseType_) this_.xhr_.responseType = this_.responseType_;
 							this_.xhr_.open(this_.method_, this_.url_, this_.async_);
 							this_.xhr_.onload = function() {
-								if (preloadXHRProgress[this_.responseType_ + '_' + this_.url_]) preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesLoaded = preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesTotal;
+								if (window.preloadXHRProgress[this_.responseType_ + '_' + this_.url_]){
+									window.preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesLoaded = window.preloadXHRProgress[this_.responseType_ + '_' + this_.url_].bytesTotal;
+								}
 
 								// If the transfer fails, then immediately fire the onload handler, and don't event attempt to cache.
 								if ((this_.xhr_.status !== 200 && this_.xhr_.status !== 0) || (!this_.xhr_.response || !(this_.xhr_.response.byteLength || this_.xhr_.response.length))) {
@@ -1637,7 +1639,7 @@ function initializeTestSuite(){
 							}
 						};
 						var len = data.byteLength || data.length;
-						preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
+						window.preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
 						postPreloadGameProgress(getPreloadProgress());
 						if (this_.onprogress) {
 							len = data.byteLength || data.length;
