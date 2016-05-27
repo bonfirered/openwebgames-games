@@ -1197,16 +1197,16 @@ function referenceTestPreTick(){
 /**
  * dump recorded input stream to the html body
  *
- * @depends recordedInputStream
+ * @depends window.recordedInputStream
  * @depends Module.canvas
  *
  * @param {Void}
  * @return {Void}
  */
 function dumpRecordedInputStream(){
-	recordedInputStream += '}<br>';
+	window.recordedInputStream += '}<br>';
 	var div = document.createElement('div');
-	div.innerHTML = '<pre>'+recordedInputStream+'</pre>';
+	div.innerHTML = '<pre>'+window.recordedInputStream+'</pre>';
 	document.body.appendChild(div);
 	Module.canvas.style = 'display: none';
 }
@@ -1736,25 +1736,25 @@ function initializeTestSuite(){
 	if (recordingInputStream){
 		Module.canvas.addEventListener('mousedown', function(e){
 			var pos = computeNormalizedCanvasPosition(e);
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mousedown", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+			window.recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mousedown", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 		});
 
 		Module.canvas.addEventListener('mouseup', function(e){
 			var pos = computeNormalizedCanvasPosition(e);
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mouseup", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+			window.recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mouseup", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 		});
 
 		Module.canvas.addEventListener('mousemove', function(e){
 			var pos = computeNormalizedCanvasPosition(e);
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mousemove", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+			window.recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mousemove", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 		});
 
 		window.addEventListener('keydown', function(e){
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateKeyEvent("keydown", ' + e.keyCode + ', ' + e.charCode + ');<br>';
+			window.recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateKeyEvent("keydown", ' + e.keyCode + ', ' + e.charCode + ');<br>';
 		});
 
 		window.addEventListener('keyup', function(e){
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateKeyEvent("keyup", ' + e.keyCode + ', ' + e.charCode + ');<br>';
+			window.recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateKeyEvent("keyup", ' + e.keyCode + ', ' + e.charCode + ');<br>';
 		});
 	}
 
