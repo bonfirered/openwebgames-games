@@ -433,7 +433,7 @@ function openDatabase(name, version, cb){
 }
 
 /**
- * Mock performance.now() and Date.now() to be deterministic for Safari
+ * Normalize performance.now() and Date.now() to be deterministic for Safari
  *
  * Note: Unfortunately looks like there does not exist a good feature test for
  * this, so resort to user agent sniffing.. (sad :/)
@@ -448,7 +448,7 @@ function openDatabase(name, version, cb){
  * @param {Void}
  * @return {Void}
  */
-function mockDeterministicNowBehavior(){
+function normalizeNowBehavior(){
 
 	// set performance.realNow
 	if (!performance.realNow) {
@@ -494,7 +494,7 @@ function mockDeterministicNowBehavior(){
 }
 
 /**
- * Mock Math.random() to be deterministic
+ * Normalize Math.random() to be deterministic
  *
  * Replace Math.random() Custom LCG to be able to deterministically seed the
  * random number generator.
@@ -505,7 +505,7 @@ function mockDeterministicNowBehavior(){
  * @param {Void}
  * @return {Void}
  */
-function mockDeterministicRandomBehavior(){
+function normalizeRandomBehavior(){
 	if (injectingInputStream || recordingInputStream) {
 		var randomState = 1;
 		Math.random = function(){
@@ -1489,14 +1489,14 @@ function initializeTestSuite(){
 	// Keeps track of event listeners, so they can be unloaded when a game is closed.
 	window.registeredEventListeners = [];
 
-	// mock performance.now() and Date.now() to be deterministic
-	mockDeterministicNowBehavior();
+	// normalize performance.now() and Date.now() to be deterministic
+	normalizeNowBehavior();
 
 	// this is an unattended run, suppress window alerts
 	suppressWindowAlerts();
 
-	// mock Math.random() to be deterministic
-	mockDeterministicRandomBehavior();
+	// normalize Math.random() to be deterministic
+	normalizeRandomBehavior();
 
 	// we hijack this later, so before we do that make a reference to the original instance
 	window.realXMLHttpRequest = XMLHttpRequest;
