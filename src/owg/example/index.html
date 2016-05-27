@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+		<!-- Custom Game Styles -->
+		<style type="text/css"></style>
+
+		<!-- OpenWebGames Styles -->
+		<link rel="stylesheet" type="text/css" href="../owgstyle.css"/>
+
+	</head>
+	<body>
+
+		<!-- OpenWebGames Canvas Container -->
+		<div id="container">
+			<canvas id="canvas" width="1366" height="768" style="width: 1366px; height: 768px;"></canvas>
+		</div>
+
+		<!-- Custom Game Module -->
+		<script type="text/javascript">
+		var Module = {
+
+			// unique game identifier
+			key: 'gamekey',
+
+			// game canvas selector
+			canvas: document.getElementById('canvas'),
+
+			// force an advance after each call rather than after each game
+			// frame by simulating Date.now() and performance.now() (some game
+			// architectures may require this)
+			// default = false
+			//needsFakeMonotonouslyIncreasingTimer: false,
+
+			// If true, Date.now()&performance.now() should not be faked at all for this demo, but the demo maintains the fixed timesteps itself. Generally always set to false, unless demo has been crafted with this specifically.
+			//dontOverrideTime: false,
+
+			// override the number of frames to render before ending game test
+			// default = 2000
+			//overrideNumFramesToRender: 2000,
+
+			// ???
+			extraDomElementsWithEventListeners: [ document.getElementById('container') ],
+
+			// provides requestAnimationFrame() for built-in emunittest
+			// default = false
+			//providesRafIntegration: false,
+
+			// enable emscripten html5.h input support
+			// default = false
+			//usesEmscriptenHTML5InputAPI: false,
+
+			// ???
+			//demoAssetSizeInBytes: 37957378,
+
+			// ???
+			//filePackagePrefixURL: "Release/",
+
+			// ???
+			//memoryInitializerPrefixURL: "Release/",
+
+			// intercept all XHRs to provide transparent caching of assets and progress bar
+			// default = true
+			//injectXMLHttpRequests: true,
+
+			// ???
+			//xhrFilter: function(url){
+			//	return true;
+			//},
+
+			// ???
+			//TOTAL_MEMORY: 188743680,
+
+			// ???
+			//preInit: [],
+
+			// ???
+			//preRun: [],
+
+			// ???
+			//postRun: [],
+
+			// ???
+			//noImageDecoding: true,
+
+			// ???
+			//noAudioDecoding: true,
+
+			// ???
+			//arguments: ['',filehostargument],
+
+			// ???
+			//print: (function(){
+			//	return function(text){
+			//		console.log (text);
+			//	};
+			//})(),
+
+			// ???
+			//infoPrinted: false,
+
+			// ???
+			//lastcurrentDownloadedSize: 0,
+
+			// ???
+			//errorhandler: function(err, url, line){
+			//	return true;
+			//},
+
+			// ???
+			//locateFile: function(url){
+			//	return url;
+			//},
+
+			// ???
+			//printErr: function(text){
+			//	console.error(text);
+			//},
+
+			// ???
+			//progress: null,
+
+			// ???
+			//setStatus: function(text){
+			//	return;
+			//},
+
+			// ???
+			//totalDependencies: 0,
+
+			// ???
+			//monitorRunDependencies: function(left){
+			//	return;
+			//},
+
+			// ???
+			//compatibilitycheck: null,
+
+			// ???
+			//dataUrl: 'assets/something.something.gz',
+
+			// ???
+			//codeUrl: 'assets/something.something.gz',
+
+			// ???
+			//memUrl: 'assets/something.something.gz',
+
+			// ???
+			//pageNeedsResizeEvent: true,
+
+			// ???
+			//injectMathFunctions: true,
+
+			// specify an artificial time scale factor (e.g. how fast time advances)
+			// default = 1.0
+			//fakeTimeScale: 1.0,
+
+			// OTHERS
+			// timeStart
+			// xhrCacheName
+			// xhrCacheVersion
+			// preMainLoop
+			// referenceTestPreTick
+			// referenceTestTick
+			// xhrFilter
+			// referenceImageData
+			// referenceImage
+			// ctx
+			// dispatchMouseEventsViaDOM
+			// dispatchKeyEventsViaDOM
+			// onRuntimeInitialized
+
+		};
+
+		</script>
+
+		<!-- Custom Game Playback Stream -->
+		<script type="text/javascript" src="playback.js"></script>
+
+		<!-- OpenWebGames Scripts -->
+		<script type="text/javascript" src="../emtimer.js"></script>
+		<script type="text/javascript" src="../cpuprofiler.js"></script>
+
+		<!-- Custom Game Scripts -->
+		<script type="text/javascript"></script>
+
+	</body>
+</html>
+
