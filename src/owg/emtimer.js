@@ -1181,7 +1181,7 @@ function replaceEventListener(obj, this_){
  * @depends performance.realNow
  * @depends window.referenceTestT0
  * @depends window.pageLoadTime
- * @depends pageStartupT0
+ * @depends window.pageStartupT0
  *
  * @param {Void}
  * @return {Void}
@@ -1190,7 +1190,7 @@ function referenceTestPreTick(){
 	++window.referenceTestPreTickCalledCount;
 	window.referenceTestT0 = performance.realNow();
 	if (window.pageLoadTime === null){
-		window.pageLoadTime = performance.realNow() - pageStartupT0;
+		window.pageLoadTime = performance.realNow() - window.pageStartupT0;
 	}
 }
 
