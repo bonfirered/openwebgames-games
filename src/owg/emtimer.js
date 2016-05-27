@@ -1222,6 +1222,97 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
 }
 
 /**
+ * track frame ticks
+ *
+ * @depends referenceTestPreTickCalledCount
+ * @depends runtimeInitialized
+ * @depends performance.realNow
+ * @depends accumulatedCpuTime
+ * @depends referenceTestT0
+ * @depends lastFrameTick
+ * @depends referenceTestFrameNumber
+ * @depends lastFrameDuration
+ * @depends numStutterEvents
+ * @depends numPreloadXHRsInFlight
+ * @depends numStartupBlockerXHRsPending
+ * @depends fakedTime
+ * @depends Module.timeStart
+ * @depends top.postMessage
+ * @depends injectingInputStream
+ * @depends numFramesToRender
+ * @depends recordingInputStream
+ * @depends Module.key
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function referenceTestTick(){
+
+	--referenceTestPreTickCalledCount;
+
+	// We are being called recursively, so ignore this call.
+	if (referenceTestPreTickCalledCount > 0){
+		return;
+	}
+
+	if (!runtimeInitialized){
+		return;
+	}
+
+	ensureNoClientHandlers();
+
+	var t1 = performance.realNow();
+	accumulatedCpuTime += t1 - referenceTestT0;
+
+	var frameDuration = t1 - lastFrameTick;
+	lastFrameTick = t1;
+
+	if (referenceTestFrameNumber > 5 && lastFrameDuration > 0){
+		if (frameDuration > 20.0 && frameDuration > lastFrameDuration * 1.35){
+			++numStutterEvents;
+		}
+	}
+	lastFrameDuration = frameDuration;
+
+	// Important! The frame number advances only for those frames that the
+	// game is not waiting for data from the initial network downloads.
+	if (numPreloadXHRsInFlight == 0){
+
+		// Actual reftest frame count only increments after game has
+		// consumed all the critical XHRs that were to be preloaded.
+		if (numStartupBlockerXHRsPending == 0){
+			++referenceTestFrameNumber;
+		}
+
+		// But game time advances immediately after the preloadable XHRs are finished.
+		++fakedTime;
+	}
+
+	if (referenceTestFrameNumber == 1){
+		Module['timeStart'] = t1;
+		loadReferenceImage();
+		top.postMessage({ msg: 'startGame', key: Module.key }, '*');
+	}
+
+	if (injectingInputStream){
+		if (typeof injectInputStream !== 'undefined'){
+			injectInputStream(referenceTestFrameNumber);
+		}
+		manageOpenALAudioMasterVolumeForTimedemo();
+	}
+
+	if (referenceTestFrameNumber == numFramesToRender){
+		if (recordingInputStream){
+			dumpRecordedInputStream();
+		} else if (injectingInputStream){
+			unloadAllEventHandlers();
+			doReferenceTest();
+		}
+	}
+
+}
+
+/**
  * initialize test suite
  *
  * @param {Void}
@@ -1482,54 +1573,6 @@ var lastFrameDuration = -1;
 // Wallclock time for when the previous frame finished.
 var lastFrameTick = -1;
 
-function referenceTestTick() {
-  --referenceTestPreTickCalledCount;
-
-  if (referenceTestPreTickCalledCount > 0)
-    return; // We are being called recursively, so ignore this call.
-
-  if (!runtimeInitialized) return;
-
-  ensureNoClientHandlers();
-
-  var t1 = performance.realNow();
-  accumulatedCpuTime += t1 - referenceTestT0;
-
-  var frameDuration = t1 - lastFrameTick;
-  lastFrameTick = t1;
-  if (referenceTestFrameNumber > 5 && lastFrameDuration > 0) {
-    if (frameDuration > 20.0 && frameDuration > lastFrameDuration * 1.35) {
-      ++numStutterEvents;
-    }
-  }
-  lastFrameDuration = frameDuration;
-
-  if (numPreloadXHRsInFlight == 0) { // Important! The frame number advances only for those frames that the game is not waiting for data from the initial network downloads.
-    if (numStartupBlockerXHRsPending == 0) ++referenceTestFrameNumber; // Actual reftest frame count only increments after game has consumed all the critical XHRs that were to be preloaded.
-    ++fakedTime; // But game time advances immediately after the preloadable XHRs are finished.
-  }
-
-  if (referenceTestFrameNumber == 1) {
-    Module['timeStart'] = t1;
-    loadReferenceImage();
-
-    top.postMessage({ msg: 'startGame', key: Module.key }, '*');
-  }
-  if (injectingInputStream) {
-    if (typeof injectInputStream !== 'undefined') {
-      injectInputStream(referenceTestFrameNumber);
-    }
-    manageOpenALAudioMasterVolumeForTimedemo();
-  }
-  if (referenceTestFrameNumber == numFramesToRender) {
-    if (recordingInputStream) {
-      dumpRecordedInputStream();
-    } else if (injectingInputStream) {
-      unloadAllEventHandlers();
-      doReferenceTest();
-    }
-  }
-}
 Module['referenceTestTick'] = referenceTestTick;
 
 Module['onRuntimeInitialized'] = function() {
