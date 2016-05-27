@@ -701,7 +701,7 @@ function loadXHR(url, responseType, onload, startupBlocker){
  * reftest game time should not progress. This is used to exclude the time that
  * the game waits for the network to not count towards the test time.
  *
- * @depends numStartupBlockerXHRsPending
+ * @depends window.numStartupBlockerXHRsPending
  * @depends Module.key
  * @depends window.realXMLHttpRequest
  * @depends window.preloadXHRProgress
@@ -720,7 +720,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 
 	// Used to detect when game time should start.
 	if (startupBlocker){
-		++numStartupBlockerXHRsPending;
+		++window.numStartupBlockerXHRsPending;
 	}
 
 	// Used to detect when the last preload XHR has finished and the game loading can start.
@@ -1312,7 +1312,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends lastFrameDuration
  * @depends numStutterEvents
  * @depends numPreloadXHRsInFlight
- * @depends numStartupBlockerXHRsPending
+ * @depends window.numStartupBlockerXHRsPending
  * @depends window.fakedTime
  * @depends Module.timeStart
  * @depends window.injectingInputStream
@@ -1357,7 +1357,7 @@ function referenceTestTick(){
 
 		// Actual reftest frame count only increments after game has
 		// consumed all the critical XHRs that were to be preloaded.
-		if (numStartupBlockerXHRsPending === 0){
+		if (window.numStartupBlockerXHRsPending === 0){
 			++window.referenceTestFrameNumber;
 		}
 
@@ -1581,7 +1581,7 @@ function initializeTestSuite(){
 
 						// Free up reference to this XHR to not leave behind used memory.
 						try {
-							if (preloadedXHRs[xhrKey].startupBlocker) --numStartupBlockerXHRsPending;
+							if (preloadedXHRs[xhrKey].startupBlocker) --window.numStartupBlockerXHRsPending;
 							delete preloadedXHRs[xhrKey];
 						} catch(e) {}
 					}, 1);
