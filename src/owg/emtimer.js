@@ -1309,7 +1309,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends window.referenceTestT0
  * @depends window.lastFrameTick
  * @depends window.referenceTestFrameNumber
- * @depends lastFrameDuration
+ * @depends window.lastFrameDuration
  * @depends window.numStutterEvents
  * @depends window.numPreloadXHRsInFlight
  * @depends window.numStartupBlockerXHRsPending
@@ -1344,12 +1344,12 @@ function referenceTestTick(){
 	var frameDuration = t1 - window.lastFrameTick;
 	window.lastFrameTick = t1;
 
-	if (window.referenceTestFrameNumber > 5 && lastFrameDuration > 0){
-		if (frameDuration > 20.0 && frameDuration > lastFrameDuration * 1.35){
+	if (window.referenceTestFrameNumber > 5 && window.lastFrameDuration > 0){
+		if (frameDuration > 20.0 && frameDuration > window.lastFrameDuration * 1.35){
 			++window.numStutterEvents;
 		}
 	}
-	lastFrameDuration = frameDuration;
+	window.lastFrameDuration = frameDuration;
 
 	// Important! The frame number advances only for those frames that the
 	// game is not waiting for data from the initial network downloads.
