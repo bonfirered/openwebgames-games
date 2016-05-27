@@ -22,6 +22,76 @@ function isInsideIframe(){
 }
 
 /**
+ * announce to the test suite that the game has started
+ *
+ * @depends Module.key
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function postStartGame(){
+	if (isInsideIframe()){
+		top.postMessage({
+			msg	: 'startGame',
+			key	: Module.key
+		}, '*');
+	}
+}
+
+/**
+ * announce to the test suite that the game has stopped
+ *
+ * @depends Module.key
+ *
+ * @param {Object} results
+ * @return {Void}
+ */
+function postStopGame(results){
+	if (isInsideIframe()){
+		top.postMessage({
+			msg		: 'stopGame',
+			key		: Module.key,
+			result	: results
+		}, '*');
+	}
+}
+
+/**
+ * announce to the test suite that the game is beginning to preload assets
+ *
+ * @depends Module.key
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function postPreloadGame(){
+	if (isInsideIframe()){
+		top.postMessage({
+			msg	: 'preloadGame',
+			key	: Module.key
+		}, '*');
+	}
+}
+
+/**
+ * announce to the test suite what the latest game preload progress is
+ *
+ * @depends Module.key
+ *
+ * @param {Float} progress [0,1]
+ * @return {Void}
+ */
+function postPreloadGameProgress(progress){
+	if (isInsideIframe()){
+		top.postMessage({
+			msg			: 'preloadProgress',
+			key			: Module.key,
+			progress	: progress
+		}, '*');
+	}
+}
+
+/**
  * handle game errors by fast-quitting and reporting back to the test suite
  *
  * @depends performance.realNow()
@@ -30,7 +100,6 @@ function isInsideIframe(){
  * @depends window.accumulatedCpuTime
  * @depends window.numFramesToRender
  * @depends window.pageLoadTime
- * @depends top.postMessage
  *
  * @param {String} msg
  * @param {String} url
@@ -85,11 +154,7 @@ function onGameError(msg, url, line, column, err){
 	}
 
 	// report back to the test suite
-	top.postMessage({
-		msg		: 'stopGame',
-		key		: Module.key,
-		result	: testResults
-	}, '*');
+	postStopGame(testResults);
 
 	// clean up before quitting
 	unloadAllEventHandlers();
@@ -643,7 +708,6 @@ function loadXHR(url, responseType, onload, startupBlocker){
  * @depends Module.key
  * @depends realXMLHttpRequest
  * @depends preloadXHRProgress
- * @depends top.postMessage
  * @depends window.postMessage
  * @depends finish() // @TODO: This function does not exist anywhere, should it be onload?
  * @depends preloadedXHRs
@@ -668,7 +732,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 	++numPreloadXHRsInFlight;
 
 	// tell test suite
-	top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
+	postPreloadGame();
 
 	var preloadFailure = function(err){
 
@@ -679,7 +743,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 		xhr.onprogress = function(evt) {
 			if (evt.lengthComputable) {
 				preloadXHRProgress[responseType + '_' + url] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
-				top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+				postPreloadGameProgress(getPreloadProgress());
 			}
 		};
 
@@ -731,7 +795,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 			bytesTotal: len
 		};
 
-		top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+		postPreloadGameProgress(getPreloadProgress());
 
 		if (onload){
 			onload();
@@ -739,6 +803,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 
 		// Once all XHRs are finished, trigger the page to start running.
 		if (--numPreloadXHRsInFlight === 0) {
+			// @todo: refactor all of this, as it is ONLY being used for Heroes of Paragon
 			console.log('All preload XHRs finished!');
 			window.postMessage('preloadXHRsfinished', '*');
 		}
@@ -835,8 +900,6 @@ function loadReferenceImage(){
  * @depends window.pageLoadTime
  * @depends numStutterEvents
  * @depends Module.key
- * @depends top.postMessage
- * @depends window.opener.postMessage
  *
  * @param {Void}
  * @return {Void}
@@ -939,14 +1002,7 @@ function doReferenceTest(){
 		};
 		console.log('reftest finished, diff: ' + wrong);
 
-		top.postMessage({ msg: 'stopGame', key: Module.key, results: testResults }, '*');
-
-		if (window.opener){
-			// Post out test results.
-			window.opener.postMessage(testResults, "*");
-			window.onbeforeunload = null; // Don't call any application onbeforeunload handlers as a response to window.close() below.
-			window.close();
-		}
+		postStopGame(testResults);
 	}
 
 	try {
@@ -1264,7 +1320,6 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends numStartupBlockerXHRsPending
  * @depends fakedTime
  * @depends Module.timeStart
- * @depends top.postMessage
  * @depends injectingInputStream
  * @depends window.numFramesToRender
  * @depends recordingInputStream
@@ -1318,7 +1373,7 @@ function referenceTestTick(){
 	if (referenceTestFrameNumber == 1){
 		Module.timeStart = t1;
 		loadReferenceImage();
-		top.postMessage({ msg: 'startGame', key: Module.key }, '*');
+		postStartGame();
 	}
 
 	if (injectingInputStream){
@@ -1549,7 +1604,7 @@ function initializeTestSuite(){
 							this_.xhr_.onprogress = function(evt) {
 								if (evt.lengthComputable) {
 									preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
-									top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+									postPreloadGameProgress(getPreloadProgress());
 								}
 								if (this_.onprogress) this_.onprogress(evt);
 							};
@@ -1590,7 +1645,7 @@ function initializeTestSuite(){
 						};
 						var len = data.byteLength || data.length;
 						preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: len, bytesTotal: len };
-						top.postMessage({ msg: 'preloadProgress', key: Module.key, progress: getPreloadProgress() }, '*');
+						postPreloadGameProgress(getPreloadProgress());
 						if (this_.onprogress) {
 							len = data.byteLength || data.length;
 							this_.onprogress({ loaded: len, total: len });
