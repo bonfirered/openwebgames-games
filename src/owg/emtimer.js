@@ -891,7 +891,7 @@ function loadReferenceImage(){
  * @depends Module.referenceImage
  * @depends Module.referenceImageData
  * @depends window.pageLoadTime
- * @depends numStutterEvents
+ * @depends window.numStutterEvents
  * @depends Module.key
  *
  * @param {Void}
@@ -991,7 +991,7 @@ function doReferenceTest(){
 			cpuIdle: cpuIdle,
 			fps: fps,
 			pageLoadTime: window.pageLoadTime,
-			numStutterEvents: numStutterEvents
+			numStutterEvents: window.numStutterEvents
 		};
 
 		postStopGame(testResults);
@@ -1310,7 +1310,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends lastFrameTick
  * @depends window.referenceTestFrameNumber
  * @depends lastFrameDuration
- * @depends numStutterEvents
+ * @depends window.numStutterEvents
  * @depends window.numPreloadXHRsInFlight
  * @depends window.numStartupBlockerXHRsPending
  * @depends window.fakedTime
@@ -1346,7 +1346,7 @@ function referenceTestTick(){
 
 	if (window.referenceTestFrameNumber > 5 && lastFrameDuration > 0){
 		if (frameDuration > 20.0 && frameDuration > lastFrameDuration * 1.35){
-			++numStutterEvents;
+			++window.numStutterEvents;
 		}
 	}
 	lastFrameDuration = frameDuration;
