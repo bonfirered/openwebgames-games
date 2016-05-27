@@ -27,7 +27,7 @@ function isInsideIframe(){
  * @depends performance.realNow()
  * @depends Module.timeStart
  * @depends Module.key
- * @depends accumulatedCpuTime
+ * @depends window.accumulatedCpuTime
  * @depends numFramesToRender
  * @depends pageLoadTime
  * @depends top.postMessage
@@ -65,15 +65,15 @@ function onGameError(msg, url, line, column, err){
 	if (msg === 'uncaught exception: exit'){
 
 		var timeEnd		= performance.realNow(),
-			duration	= timeEnd - ModuletimeStart,
-			cpuIdle		= (duration - accumulatedCpuTime) / duration,
+			duration	= timeEnd - Module.timeStart,
+			cpuIdle		= (duration - window.accumulatedCpuTime) / duration,
 			fps			= numFramesToRender * 1000.0 / duration;
 
 		testResults = {
 			result				: 'PASS',
 			totalTime			: Math.round(duration),
 			wrongPixels			: 0,
-			cpuTime				: Math.round(accumulatedCpuTime),
+			cpuTime				: Math.round(window.accumulatedCpuTime),
 			cpuIdle				: cpuIdle,
 			fps					: fps,
 			pageLoadTime		: pageLoadTime,
@@ -828,7 +828,7 @@ function loadReferenceImage(){
  * @depends Module.canvas
  * @depends performance.realNow
  * @depends Module.timeStart
- * @depends accumulatedCpuTime
+ * @depends window.accumulatedCpuTime
  * @depends numFramesToRender
  * @depends Module.referenceImage
  * @depends Module.referenceImageData
@@ -862,7 +862,7 @@ function doReferenceTest(){
 	function reftest(){
 		var timeEnd = performance.realNow();
 		var duration = timeEnd - Module.timeStart;
-		var cpuIdle = (duration - accumulatedCpuTime) / duration;
+		var cpuIdle = (duration - window.accumulatedCpuTime) / duration;
 		var fps = numFramesToRender * 1000.0 / duration;
 		var wrong = Infinity;
 		var testResult = 'FAIL';
@@ -931,7 +931,7 @@ function doReferenceTest(){
 			totalTime: Math.round(duration),
 			wrongPixels: wrong,
 			result: testResult,
-			cpuTime: Math.round(accumulatedCpuTime),
+			cpuTime: Math.round(window.accumulatedCpuTime),
 			cpuIdle: cpuIdle,
 			fps: fps,
 			pageLoadTime: pageLoadTime,
@@ -1254,7 +1254,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends referenceTestPreTickCalledCount
  * @depends runtimeInitialized
  * @depends performance.realNow
- * @depends accumulatedCpuTime
+ * @depends window.accumulatedCpuTime
  * @depends referenceTestT0
  * @depends lastFrameTick
  * @depends referenceTestFrameNumber
@@ -1289,7 +1289,7 @@ function referenceTestTick(){
 	ensureNoClientHandlers();
 
 	var t1 = performance.realNow();
-	accumulatedCpuTime += t1 - referenceTestT0;
+	window.accumulatedCpuTime += t1 - referenceTestT0;
 
 	var frameDuration = t1 - lastFrameTick;
 	lastFrameTick = t1;
