@@ -1085,9 +1085,10 @@ function simulateKeyEvent(eventType, keyCode, charCode){
 }
 
 /**
- * ???
+ * @todo: need proper short description for this function
  *
- * Note: If this_ is specified, addEventListener is called using that as the 'this' object. Otherwise the current this is used.
+ * Note: If this_ is specified, addEventListener is called using that as the
+ * 'this' object. Otherwise the current this is used.
  *
  * @depends overriddenMessageTypes
  * @depends Module.dispatchMouseEventsViaDOM
