@@ -1179,7 +1179,7 @@ function replaceEventListener(obj, this_){
  *
  * @depends window.referenceTestPreTickCalledCount
  * @depends performance.realNow
- * @depends referenceTestT0 *
+ * @depends window.referenceTestT0
  * @depends window.pageLoadTime
  * @depends pageStartupT0
  *
@@ -1188,7 +1188,7 @@ function replaceEventListener(obj, this_){
  */
 function referenceTestPreTick(){
 	++window.referenceTestPreTickCalledCount;
-	referenceTestT0 = performance.realNow();
+	window.referenceTestT0 = performance.realNow();
 	if (window.pageLoadTime === null){
 		window.pageLoadTime = performance.realNow() - pageStartupT0;
 	}
@@ -1306,7 +1306,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends window.runtimeInitialized
  * @depends performance.realNow
  * @depends window.accumulatedCpuTime
- * @depends referenceTestT0
+ * @depends window.referenceTestT0
  * @depends lastFrameTick
  * @depends window.referenceTestFrameNumber
  * @depends lastFrameDuration
@@ -1339,7 +1339,7 @@ function referenceTestTick(){
 	ensureNoClientHandlers();
 
 	var t1 = performance.realNow();
-	window.accumulatedCpuTime += t1 - referenceTestT0;
+	window.accumulatedCpuTime += t1 - window.referenceTestT0;
 
 	var frameDuration = t1 - lastFrameTick;
 	lastFrameTick = t1;
