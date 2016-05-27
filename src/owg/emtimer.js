@@ -1307,7 +1307,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends performance.realNow
  * @depends window.accumulatedCpuTime
  * @depends window.referenceTestT0
- * @depends lastFrameTick
+ * @depends window.lastFrameTick
  * @depends window.referenceTestFrameNumber
  * @depends lastFrameDuration
  * @depends window.numStutterEvents
@@ -1341,8 +1341,8 @@ function referenceTestTick(){
 	var t1 = performance.realNow();
 	window.accumulatedCpuTime += t1 - window.referenceTestT0;
 
-	var frameDuration = t1 - lastFrameTick;
-	lastFrameTick = t1;
+	var frameDuration = t1 - window.lastFrameTick;
+	window.lastFrameTick = t1;
 
 	if (window.referenceTestFrameNumber > 5 && lastFrameDuration > 0){
 		if (frameDuration > 20.0 && frameDuration > lastFrameDuration * 1.35){
