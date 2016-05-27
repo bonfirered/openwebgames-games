@@ -51,7 +51,7 @@ function postStopGame(results){
 		top.postMessage({
 			msg		: 'stopGame',
 			key		: Module.key,
-			result	: results
+			results	: results
 		}, '*');
 	}
 }
@@ -148,8 +148,6 @@ function onGameError(msg, url, line, column, err){
 			pageLoadTime		: window.pageLoadTime,
 			numStutterEvents	: 0
 		};
-
-		console.log('game exit', testResults);
 
 	}
 
@@ -331,7 +329,7 @@ function getNumFramesToRender(){
  *
  * @depends window.registeredEventListeners
  * @depends window.realXMLHttpRequest
- * @depends realAddEventListener
+ * @depends window.realAddEventListener
  *
  * @param {Void}
  * @return {Void}
@@ -357,7 +355,7 @@ function unloadAllEventHandlers(){
 
 	// suppress exceptions thrown on non-supporting browsers
 	try {
-		EventTarget.prototype.addEventListener = realAddEventListener;
+		EventTarget.prototype.addEventListener = window.realAddEventListener;
 	} catch(e) {}
 
 }
@@ -575,7 +573,6 @@ function fetchCachedPackage(db, packageName, cb) {
 		getRequest.onsuccess = function(event){
 			if (event.target.result){
 				var len = event.target.result.byteLength || event.target.result.length;
-				console.log('Loaded file ' + packageName + ' from IndexedDB cache, length: ' + len);
 				cb(null, event.target.result);
 			} else {
 				// Succeeded to load, but the load came back with the value of undefined, treat that as an error since we never store undefined in db.
@@ -618,11 +615,9 @@ function cacheRemotePackage(db, packageName, packageData, cb) {
 		var packages = transaction.objectStore('FILES');
 		var putRequest = packages.put(packageData, "file/" + Module.key + '/' + packageName);
 		putRequest.onsuccess = function(event){
-			console.log('Stored file ' + packageName + ' to IndexedDB cache.');
 			cb(null, packageName);
 		};
 		putRequest.onerror = function(error){
-			console.log('Failed to store file ' + packageName + ' to IndexedDB cache!');
 			cb(error);
 		};
 	} catch(e) {
@@ -721,8 +716,6 @@ function loadXHR(url, responseType, onload, startupBlocker){
  */
 function preloadXHR(url, responseType, onload, startupBlocker){
 
-	console.log('preloadXHR', arguments);
-
 	// Used to detect when game time should start.
 	if (startupBlocker){
 		++numStartupBlockerXHRsPending;
@@ -748,7 +741,6 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 		};
 
 		xhr.onload = function() {
-			console.log('preloaded XHR ' + url + ' finished!');
 
 			// @todo: refactor this handler (always assuming success seems wrong on first blush)
 
@@ -804,7 +796,6 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 		// Once all XHRs are finished, trigger the page to start running.
 		if (--numPreloadXHRsInFlight === 0) {
 			// @todo: refactor all of this, as it is ONLY being used for Heroes of Paragon
-			console.log('All preload XHRs finished!');
 			window.postMessage('preloadXHRsfinished', '*');
 		}
 
@@ -1000,7 +991,6 @@ function doReferenceTest(){
 			pageLoadTime: window.pageLoadTime,
 			numStutterEvents: numStutterEvents
 		};
-		console.log('reftest finished, diff: ' + wrong);
 
 		postStopGame(testResults);
 	}
@@ -1146,7 +1136,7 @@ function simulateKeyEvent(eventType, keyCode, charCode){
  * Note: If this_ is specified, addEventListener is called using that as the
  * 'this' object. Otherwise the current this is used.
  *
- * @depends overriddenMessageTypes
+ * @depends window.overriddenMessageTypes
  * @depends Module.dispatchMouseEventsViaDOM
  * @depends Module.dispatchKeyEventsViaDOM
  * @depends window.registeredEventListeners
@@ -1156,10 +1146,13 @@ function simulateKeyEvent(eventType, keyCode, charCode){
  * @return {Void}
  */
 function replaceEventListener(obj, this_){
+	// @todo: confirm that this is actually working as making
+	// realAddEventListener local prevents it from being accessed in other
+	// functions, but it is also referenced inside unloadAllEventHandlers
 	var realAddEventListener = obj.addEventListener;
 	obj.addEventListener = function(type, listener, useCapture){
 		ensureNoClientHandlers();
-		if (overriddenMessageTypes.indexOf(type) != -1){
+		if (window.overriddenMessageTypes.indexOf(type) != -1){
 			var registerListenerToDOM = (type.indexOf('mouse') == -1 || Module.dispatchMouseEventsViaDOM) && (type.indexOf('key') == -1 || Module.dispatchKeyEventsViaDOM);
 			var filteredEventListener = function(e){
 				try {
