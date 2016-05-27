@@ -329,8 +329,8 @@ function getNumFramesToRender(){
 /**
  * unload all event handlers
  *
- * @depends registeredEventListeners
- * @depends realXMLHttpRequest
+ * @depends window.registeredEventListeners
+ * @depends window.realXMLHttpRequest
  * @depends realAddEventListener
  *
  * @param {Void}
@@ -339,18 +339,18 @@ function getNumFramesToRender(){
 function unloadAllEventHandlers(){
 
 	// unload all registered event listeners
-	for(var i in registeredEventListeners){
-		var l = registeredEventListeners[i];
+	for(var i in window.registeredEventListeners){
+		var l = window.registeredEventListeners[i];
 		l[0].removeEventListener(l[1], l[2], l[3]);
 	}
 
 	// prepare registered event listeners for reuse
-	registeredEventListeners = [];
+	window.registeredEventListeners = [];
 
 	// prepare xhrs for reuse
 	preloadedXHRs = {};
 	numPreloadXHRsInFlight = 0;
-	XMLHttpRequest = realXMLHttpRequest;
+	XMLHttpRequest = window.realXMLHttpRequest;
 
 	// remove page unload events
 	ensureNoClientHandlers();
@@ -438,12 +438,12 @@ function openDatabase(name, version, cb){
  * Note: Unfortunately looks like there does not exist a good feature test for
  * this, so resort to user agent sniffing.. (sad :/)
  *
- * @depends injectingInputStream
- * @depends recordingInputStream
+ * @depends window.injectingInputStream
+ * @depends window.recordingInputStream
  * @depends Module.dontOverrideTime
  * @depends Module.fakeTimeScale
  * @depends Module.needsFakeMonotonouslyIncreasingTimer
- * @depends fakedTime
+ * @depends window.fakedTime
  *
  * @param {Void}
  * @return {Void}
@@ -468,24 +468,24 @@ function normalizeNowBehavior(){
 	Date.realNow = Date.now;
 
 	// override now functions with fake timers if not in interactive mode
-	if (injectingInputStream || recordingInputStream){
+	if (window.injectingInputStream || window.recordingInputStream){
 		if (!Module.dontOverrideTime){
 			var timeScale = (typeof Module.fakeTimeScale !== 'undefined') ? Module.fakeTimeScale : 1.0;
 			if (Module.needsFakeMonotonouslyIncreasingTimer) {
 				Date.now = function(){
-					fakedTime += timeScale;
-					return fakedTime;
+					window.fakedTime += timeScale;
+					return window.fakedTime;
 				};
 				performance.now = function(){
-					fakedTime += timeScale;
-					return fakedTime;
+					window.fakedTime += timeScale;
+					return window.fakedTime;
 				};
 			} else {
 				Date.now = function(){
-					return fakedTime * 1000.0 * timeScale / 60.0;
+					return window.fakedTime * 1000.0 * timeScale / 60.0;
 				};
 				performance.now = function(){
-					return fakedTime * 1000.0 * timeScale / 60.0;
+					return window.fakedTime * 1000.0 * timeScale / 60.0;
 				};
 			}
 		}
@@ -499,14 +499,14 @@ function normalizeNowBehavior(){
  * Replace Math.random() Custom LCG to be able to deterministically seed the
  * random number generator.
  *
- * @depends injectingInputStream
- * @depends recordingInputStream
+ * @depends window.injectingInputStream
+ * @depends window.recordingInputStream
  *
  * @param {Void}
  * @return {Void}
  */
 function normalizeRandomBehavior(){
-	if (injectingInputStream || recordingInputStream) {
+	if (window.injectingInputStream || window.recordingInputStream) {
 		var randomState = 1;
 		Math.random = function(){
 			randomState = (((((1103515245 * randomState)>>>0) + 12345) >>> 0) % 0x80000000)>>>0;
@@ -706,7 +706,7 @@ function loadXHR(url, responseType, onload, startupBlocker){
  *
  * @depends numStartupBlockerXHRsPending
  * @depends Module.key
- * @depends realXMLHttpRequest
+ * @depends window.realXMLHttpRequest
  * @depends preloadXHRProgress
  * @depends window.postMessage
  * @depends finish() // @TODO: This function does not exist anywhere, should it be onload?
@@ -736,7 +736,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 
 	var preloadFailure = function(err){
 
-		var xhr = new realXMLHttpRequest();
+		var xhr = new window.realXMLHttpRequest();
 		xhr.open('GET', url, true);
 		xhr.responseType = responseType;
 
@@ -772,7 +772,7 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 
 	var preloadSuccess = function(xhrOrData){
 
-		if (xhrOrData instanceof realXMLHttpRequest){
+		if (xhrOrData instanceof window.realXMLHttpRequest){
 			preloadedXHRs[responseType + '_' + url] = xhrOrData;
 		} else {
 			preloadedXHRs[responseType + '_' + url] = {
@@ -1029,7 +1029,7 @@ function doReferenceTest(){
  * @depends Module.canvas
  * @depends Module.usesEmscriptenHTML5InputAPI
  * @depends Module.dispatchMouseEventsViaDOM
- * @depends registeredEventListeners
+ * @depends window.registeredEventListeners
  *
  * @param {String} eventType (mousemove, mousedown, mouseup)
  * @param {Float} x
@@ -1066,10 +1066,10 @@ function simulateMouseEvent(eventType, x, y, button) {
 		if (Module.canvas.clientWidth != Module.canvas.offsetWidth || Module.canvas.clientHeight != Module.canvas.offsetHeight){
 			throw "ERROR! Canvas object must have 0px border for direct mouse dispatch to work!";
 		}
-		for(i = 0; i < registeredEventListeners.length; ++i){
-			var this_ = registeredEventListeners[i][0];
-			var type = registeredEventListeners[i][1];
-			var listener = registeredEventListeners[i][2];
+		for(i = 0; i < window.registeredEventListeners.length; ++i){
+			var this_ = window.registeredEventListeners[i][0];
+			var type = window.registeredEventListeners[i][1];
+			var listener = window.registeredEventListeners[i][2];
 			if (type == eventType){
 				listener.call(this_, e);
 			}
@@ -1122,10 +1122,10 @@ function simulateKeyEvent(eventType, keyCode, charCode){
 			}
 		}
 	} else if (!Module.dispatchKeyEventsViaDOM){
-		for(i = 0; i < registeredEventListeners.length; ++i){
-			var this_ = registeredEventListeners[i][0];
-			var type = registeredEventListeners[i][1];
-			var listener = registeredEventListeners[i][2];
+		for(i = 0; i < window.registeredEventListeners.length; ++i){
+			var this_ = window.registeredEventListeners[i][0];
+			var type = window.registeredEventListeners[i][1];
+			var listener = window.registeredEventListeners[i][2];
 			if (type == eventType){
 				listener.call(this_, e);
 			}
@@ -1149,7 +1149,7 @@ function simulateKeyEvent(eventType, keyCode, charCode){
  * @depends overriddenMessageTypes
  * @depends Module.dispatchMouseEventsViaDOM
  * @depends Module.dispatchKeyEventsViaDOM
- * @depends registeredEventListeners
+ * @depends window.registeredEventListeners
  *
  * @param {Object} obj
  * @param {Object} this_
@@ -1171,10 +1171,10 @@ function replaceEventListener(obj, this_){
 			if (registerListenerToDOM){
 				realAddEventListener.call(this_ || this, type, filteredEventListener, useCapture);
 			}
-			registeredEventListeners.push([this_ || this, type, filteredEventListener, useCapture]);
+			window.registeredEventListeners.push([this_ || this, type, filteredEventListener, useCapture]);
 		} else {
 			realAddEventListener.call(this_ || this, type, listener, useCapture);
-			registeredEventListeners.push([this_ || this, type, listener, useCapture]);
+			window.registeredEventListeners.push([this_ || this, type, listener, useCapture]);
 		}
 	};
 }
@@ -1251,8 +1251,8 @@ function applyGain(audioInstance, desiredAudioVolume){
 /**
  * perform a nice fade-in and fade-out of audio volume
  *
- * @depends referenceTestFrameNumber
- * @depends numFramesToRender
+ * @depends window.referenceTestFrameNumber
+ * @depends window.numFramesToRender
  *
  * @param {Void}
  * @return {Void}
@@ -1264,13 +1264,13 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
 	var silenceTime = 90;
 
 	// Only fade out for now.
-	if (referenceTestFrameNumber < window.numFramesToRender - fadeTime - silenceTime){
+	if (window.referenceTestFrameNumber < window.numFramesToRender - fadeTime - silenceTime){
 		return;
 	}
 
 	var desiredAudioVolume = Math.min(
-		rampFloat(0, 0.0, fadeTime, 1.0, referenceTestFrameNumber),
-		rampFloat(window.numFramesToRender - fadeTime - silenceTime, 1.0, window.numFramesToRender - silenceTime, 0.0, referenceTestFrameNumber)
+		rampFloat(0, 0.0, fadeTime, 1.0, window.referenceTestFrameNumber),
+		rampFloat(window.numFramesToRender - fadeTime - silenceTime, 1.0, window.numFramesToRender - silenceTime, 0.0, window.referenceTestFrameNumber)
 	);
 
 	var pageBGAudio = document.getElementById('AudioElement');
@@ -1298,7 +1298,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
 		// Finally, kill audio altogether.
 		// N.b. check for the existence of WEBAudio.audioContext.suspend, since e.g. Edge 13 doesn't have it:
 		// https://wpdev.uservoice.com/forums/257854-microsoft-edge-developer/suggestions/12855546-web-audio-api-audiocontext-needs-suspend-and-resum
-		if (WEBAudio.audioContext && WEBAudio.audioContext.suspend && referenceTestFrameNumber >= window.numFramesToRender){
+		if (WEBAudio.audioContext && WEBAudio.audioContext.suspend && window.referenceTestFrameNumber >= window.numFramesToRender){
 			WEBAudio.audioContext.suspend();
 		}
 	}
@@ -1308,21 +1308,21 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * track frame ticks
  *
  * @depends referenceTestPreTickCalledCount
- * @depends runtimeInitialized
+ * @depends window.runtimeInitialized
  * @depends performance.realNow
  * @depends window.accumulatedCpuTime
  * @depends referenceTestT0
  * @depends lastFrameTick
- * @depends referenceTestFrameNumber
+ * @depends window.referenceTestFrameNumber
  * @depends lastFrameDuration
  * @depends numStutterEvents
  * @depends numPreloadXHRsInFlight
  * @depends numStartupBlockerXHRsPending
- * @depends fakedTime
+ * @depends window.fakedTime
  * @depends Module.timeStart
- * @depends injectingInputStream
+ * @depends window.injectingInputStream
  * @depends window.numFramesToRender
- * @depends recordingInputStream
+ * @depends window.recordingInputStream
  * @depends Module.key
  *
  * @param {Void}
@@ -1337,7 +1337,7 @@ function referenceTestTick(){
 		return;
 	}
 
-	if (!runtimeInitialized){
+	if (!window.runtimeInitialized){
 		return;
 	}
 
@@ -1349,7 +1349,7 @@ function referenceTestTick(){
 	var frameDuration = t1 - lastFrameTick;
 	lastFrameTick = t1;
 
-	if (referenceTestFrameNumber > 5 && lastFrameDuration > 0){
+	if (window.referenceTestFrameNumber > 5 && lastFrameDuration > 0){
 		if (frameDuration > 20.0 && frameDuration > lastFrameDuration * 1.35){
 			++numStutterEvents;
 		}
@@ -1363,30 +1363,30 @@ function referenceTestTick(){
 		// Actual reftest frame count only increments after game has
 		// consumed all the critical XHRs that were to be preloaded.
 		if (numStartupBlockerXHRsPending === 0){
-			++referenceTestFrameNumber;
+			++window.referenceTestFrameNumber;
 		}
 
 		// But game time advances immediately after the preloadable XHRs are finished.
-		++fakedTime;
+		++window.fakedTime;
 	}
 
-	if (referenceTestFrameNumber == 1){
+	if (window.referenceTestFrameNumber == 1){
 		Module.timeStart = t1;
 		loadReferenceImage();
 		postStartGame();
 	}
 
-	if (injectingInputStream){
+	if (window.injectingInputStream){
 		if (typeof injectInputStream !== 'undefined'){
-			injectInputStream(referenceTestFrameNumber);
+			injectInputStream(window.referenceTestFrameNumber);
 		}
 		manageOpenALAudioMasterVolumeForTimedemo();
 	}
 
-	if (referenceTestFrameNumber == window.numFramesToRender){
-		if (recordingInputStream){
+	if (window.referenceTestFrameNumber == window.numFramesToRender){
+		if (window.recordingInputStream){
 			dumpRecordedInputStream();
-		} else if (injectingInputStream){
+		} else if (window.injectingInputStream){
 			unloadAllEventHandlers();
 			doReferenceTest();
 		}
@@ -1397,9 +1397,9 @@ function referenceTestTick(){
 /**
  * initialize emscripten runtime
  *
- * @depends fakeTime
- * @depends referenceTestFrameNumber
- * @depends runtimeInitialized
+ * @depends window.fakedTime
+ * @depends window.referenceTestFrameNumber
+ * @depends window.runtimeInitialized
  *
  * Note: Calling this reports that main() has been called.
  *
@@ -1407,9 +1407,9 @@ function referenceTestTick(){
  * @return {Void}
  */
 function initializeRuntime(){
-	fakedTime = 0;
-	referenceTestFrameNumber = 0;
-	runtimeInitialized = 1;
+	window.fakedTime = 0;
+	window.referenceTestFrameNumber = 0;
+	window.runtimeInitialized = 1;
 	if (typeof cpuprofiler_add_hooks !== 'undefined' && location.search.indexOf('cpuprofiler') != -1){
 		cpuprofiler_add_hooks();
 	}
@@ -1600,7 +1600,7 @@ function initializeTestSuite(){
 					var handler = function(err, data){
 						if (!!err){
 							// The XHR has not been cached up in advance. Log a trace and do it now on demand.
-							this_.xhr_ = new realXMLHttpRequest();
+							this_.xhr_ = new window.realXMLHttpRequest();
 							this_.xhr_.onprogress = function(evt) {
 								if (evt.lengthComputable) {
 									preloadXHRProgress[this_.responseType_ + '_' + this_.url_] = { bytesLoaded: evt.loaded, bytesTotal: evt.total};
@@ -1696,7 +1696,7 @@ function initializeTestSuite(){
 		};
 	}
 
-	if (injectingInputStream){
+	if (window.injectingInputStream){
 		// Filter the page event handlers to only pass programmatically generated
 		// events to the site - all real user input needs to be discarded since we
 		// are doing a programmatic run.
@@ -1739,31 +1739,31 @@ function initializeTestSuite(){
 	if (recordingInputStream){
 		Module.canvas.addEventListener('mousedown', function(e){
 			var pos = computeNormalizedCanvasPosition(e);
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousedown", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mousedown", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 		});
 
 		Module.canvas.addEventListener('mouseup', function(e){
 			var pos = computeNormalizedCanvasPosition(e);
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mouseup", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mouseup", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 		});
 
 		Module.canvas.addEventListener('mousemove', function(e){
 			var pos = computeNormalizedCanvasPosition(e);
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateMouseEvent("mousemove", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
+			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateMouseEvent("mousemove", '+ pos[0] + ', ' + pos[1] + ', 0);<br>';
 		});
 
 		window.addEventListener('keydown', function(e){
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateKeyEvent("keydown", ' + e.keyCode + ', ' + e.charCode + ');<br>';
+			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateKeyEvent("keydown", ' + e.keyCode + ', ' + e.charCode + ');<br>';
 		});
 
 		window.addEventListener('keyup', function(e){
-			recordedInputStream += 'if (referenceTestFrameNumber == ' + referenceTestFrameNumber + ') simulateKeyEvent("keyup", ' + e.keyCode + ', ' + e.charCode + ');<br>';
+			recordedInputStream += 'if (referenceTestFrameNumber == ' + window.referenceTestFrameNumber + ') simulateKeyEvent("keyup", ' + e.keyCode + ', ' + e.charCode + ');<br>';
 		});
 	}
 
 	// Hide a few Emscripten-specific page elements from the default shell to
 	// remove unwanted interactivity options.
-	if (injectingInputStream || recordingInputStream){
+	if (window.injectingInputStream || recordingInputStream){
 		var elems = document.getElementsByClassName('fullscreen');
 		for(i in elems){
 			var e = elems[i];
