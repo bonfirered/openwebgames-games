@@ -346,7 +346,7 @@ function unloadAllEventHandlers(){
 	window.registeredEventListeners = [];
 
 	// prepare xhrs for reuse
-	preloadedXHRs = {};
+	window.preloadedXHRs = {};
 	numPreloadXHRsInFlight = 0;
 	XMLHttpRequest = window.realXMLHttpRequest;
 
@@ -695,7 +695,7 @@ function loadXHR(url, responseType, onload, startupBlocker){
  * preload XHR data
  *
  * E.g. use the following function to load one by one (or do it somewhere else
- * and set preloadedXHRs object)
+ * and set window.preloadedXHRs object)
  *
  * startupBlocker: If true, then this preload XHR is one without which the
  * reftest game time should not progress. This is used to exclude the time that
@@ -706,8 +706,7 @@ function loadXHR(url, responseType, onload, startupBlocker){
  * @depends window.realXMLHttpRequest
  * @depends window.preloadXHRProgress
  * @depends window.postMessage
- * @depends finish() // @TODO: This function does not exist anywhere, should it be onload?
- * @depends preloadedXHRs
+ * @depends window.preloadedXHRs
  * @depends numPreloadXHRsInFlight
  *
  * @param {String} url
@@ -767,9 +766,9 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 	var preloadSuccess = function(xhrOrData){
 
 		if (xhrOrData instanceof window.realXMLHttpRequest){
-			preloadedXHRs[responseType + '_' + url] = xhrOrData;
+			window.preloadedXHRs[responseType + '_' + url] = xhrOrData;
 		} else {
-			preloadedXHRs[responseType + '_' + url] = {
+			window.preloadedXHRs[responseType + '_' + url] = {
 				response: xhrOrData,
 				responseText: xhrOrData,
 				status: 200,
@@ -781,9 +780,9 @@ function preloadXHR(url, responseType, onload, startupBlocker){
 				}
 			};
 		}
-		preloadedXHRs[responseType + '_' + url].startupBlocker = startupBlocker;
+		window.preloadedXHRs[responseType + '_' + url].startupBlocker = startupBlocker;
 
-		var len = preloadedXHRs[responseType + '_' + url].response.byteLength || preloadedXHRs[responseType + '_' + url].response.length;
+		var len = window.preloadedXHRs[responseType + '_' + url].response.byteLength || window.preloadedXHRs[responseType + '_' + url].response.length;
 		window.preloadXHRProgress[responseType + '_' + url] = {
 			bytesLoaded: len,
 			bytesTotal: len
@@ -1557,14 +1556,14 @@ function initializeTestSuite(){
 			send: function(data){
 				var this_ = this;
 				var xhrKey = this_.responseType_ + '_' + this_.url_;
-				this_.xhr_ = preloadedXHRs[xhrKey];
+				this_.xhr_ = window.preloadedXHRs[xhrKey];
 				if (!this.xhr_){
 					var base = document.getElementsByTagName('base');
 					if (base.length > 0 && base[0].href){
 						var baseHref = document.getElementsByTagName('base')[0].href;
 						xhrKey = this_.responseType_ + '_' + baseHref + this_.url_;
-						if (preloadedXHRs[xhrKey]){
-							this_.xhr_ = preloadedXHRs[xhrKey];
+						if (window.preloadedXHRs[xhrKey]){
+							this_.xhr_ = window.preloadedXHRs[xhrKey];
 						}
 					}
 				}
@@ -1581,8 +1580,8 @@ function initializeTestSuite(){
 
 						// Free up reference to this XHR to not leave behind used memory.
 						try {
-							if (preloadedXHRs[xhrKey].startupBlocker) --window.numStartupBlockerXHRsPending;
-							delete preloadedXHRs[xhrKey];
+							if (window.preloadedXHRs[xhrKey].startupBlocker) --window.numStartupBlockerXHRsPending;
+							delete window.preloadedXHRs[xhrKey];
 						} catch(e) {}
 					}, 1);
 				} else {
