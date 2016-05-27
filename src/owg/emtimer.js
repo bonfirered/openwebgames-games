@@ -28,7 +28,7 @@ function isInsideIframe(){
  * @depends Module.timeStart
  * @depends Module.key
  * @depends window.accumulatedCpuTime
- * @depends numFramesToRender
+ * @depends window.numFramesToRender
  * @depends pageLoadTime
  * @depends top.postMessage
  *
@@ -67,7 +67,7 @@ function onGameError(msg, url, line, column, err){
 		var timeEnd		= performance.realNow(),
 			duration	= timeEnd - Module.timeStart,
 			cpuIdle		= (duration - window.accumulatedCpuTime) / duration,
-			fps			= numFramesToRender * 1000.0 / duration;
+			fps			= window.numFramesToRender * 1000.0 / duration;
 
 		testResults = {
 			result				: 'PASS',
@@ -829,7 +829,7 @@ function loadReferenceImage(){
  * @depends performance.realNow
  * @depends Module.timeStart
  * @depends window.accumulatedCpuTime
- * @depends numFramesToRender
+ * @depends window.numFramesToRender
  * @depends Module.referenceImage
  * @depends Module.referenceImageData
  * @depends pageLoadTime
@@ -863,7 +863,7 @@ function doReferenceTest(){
 		var timeEnd = performance.realNow();
 		var duration = timeEnd - Module.timeStart;
 		var cpuIdle = (duration - window.accumulatedCpuTime) / duration;
-		var fps = numFramesToRender * 1000.0 / duration;
+		var fps = window.numFramesToRender * 1000.0 / duration;
 		var wrong = Infinity;
 		var testResult = 'FAIL';
 
@@ -1208,13 +1208,13 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
 	var silenceTime = 90;
 
 	// Only fade out for now.
-	if (referenceTestFrameNumber < numFramesToRender - fadeTime - silenceTime){
+	if (referenceTestFrameNumber < window.numFramesToRender - fadeTime - silenceTime){
 		return;
 	}
 
 	var desiredAudioVolume = Math.min(
 		rampFloat(0, 0.0, fadeTime, 1.0, referenceTestFrameNumber),
-		rampFloat(numFramesToRender - fadeTime - silenceTime, 1.0, numFramesToRender - silenceTime, 0.0, referenceTestFrameNumber)
+		rampFloat(window.numFramesToRender - fadeTime - silenceTime, 1.0, window.numFramesToRender - silenceTime, 0.0, referenceTestFrameNumber)
 	);
 
 	var pageBGAudio = document.getElementById('AudioElement');
@@ -1242,7 +1242,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
 		// Finally, kill audio altogether.
 		// N.b. check for the existence of WEBAudio.audioContext.suspend, since e.g. Edge 13 doesn't have it:
 		// https://wpdev.uservoice.com/forums/257854-microsoft-edge-developer/suggestions/12855546-web-audio-api-audiocontext-needs-suspend-and-resum
-		if (WEBAudio.audioContext && WEBAudio.audioContext.suspend && referenceTestFrameNumber >= numFramesToRender){
+		if (WEBAudio.audioContext && WEBAudio.audioContext.suspend && referenceTestFrameNumber >= window.numFramesToRender){
 			WEBAudio.audioContext.suspend();
 		}
 	}
@@ -1266,7 +1266,7 @@ function manageOpenALAudioMasterVolumeForTimedemo(){
  * @depends Module.timeStart
  * @depends top.postMessage
  * @depends injectingInputStream
- * @depends numFramesToRender
+ * @depends window.numFramesToRender
  * @depends recordingInputStream
  * @depends Module.key
  *
@@ -1328,7 +1328,7 @@ function referenceTestTick(){
 		manageOpenALAudioMasterVolumeForTimedemo();
 	}
 
-	if (referenceTestFrameNumber == numFramesToRender){
+	if (referenceTestFrameNumber == window.numFramesToRender){
 		if (recordingInputStream){
 			dumpRecordedInputStream();
 		} else if (injectingInputStream){
