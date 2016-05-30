@@ -58,6 +58,10 @@
       s.setAttribute('src', src);
       s.onload = function() {
         Module['onRuntimeInitialized']();
+        setTimeout(function() {
+          console.log('hack: forcing relayout of the DOM to work around Chrome bug where 2D canvas does not show up correctly.');
+          Module['canvas'].style.position = 'fixed'; // Was 'static' (default) before setting this, but the page doesn't really care which.
+        }, 4000);
       }
       document.body.appendChild(s);
     }
