@@ -24,7 +24,6 @@
         display: none;
       }
       #main {
-        border: 1px dotted #fff;
         -webkit-box-shadow: 0 0 30px -12px #fff;
            -moz-box-shadow: 0 0 30px -12px #fff;
             -ms-box-shadow: 0 0 30px -12px #fff;
@@ -44,19 +43,27 @@
     <script>
       var Module = {
         key: 'hurry',
-        canvas: document.getElementById('main')
+        canvas: document.getElementById('main'),
+        pageNeedsResizeEvent: true
       };
     </script>
     <script src="../emtimer.js"></script>
     <script src='../cpuprofiler.js'></script>
     <script>
-    // EMTIMER: For noninteractive use, the page should not interactively request pointer lock.
-    document.getElementById('main').requestPointerLock = function() {}
-    Module['onRuntimeInitialized']();
-
+    if (location.search.indexOf('playback') != -1 || location.search.indexOf('record') != -1) {
+      // EMTIMER: For noninteractive use, the page should not interactively request pointer lock.
+      document.getElementById('main').requestPointerLock = function() {}
+    }
     function addScript(src) {
       var s = document.createElement('script');
       s.setAttribute('src', src);
+      s.onload = function() {
+        Module['onRuntimeInitialized']();
+        setTimeout(function() {
+          console.log('hack: forcing relayout of the DOM to work around Chrome bug where 2D canvas does not show up correctly.');
+          Module['canvas'].style.position = 'fixed'; // Was 'static' (default) before setting this, but the page doesn't really care which.
+        }, 4000);
+      }
       document.body.appendChild(s);
     }
     window.onload = function() {

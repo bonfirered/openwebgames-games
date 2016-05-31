@@ -100,7 +100,8 @@
         key: 'medusae',
         canvas: document.getElementById('canvas'),
         needsFakeMonotonouslyIncreasingTimer: true,
-        overrideNumFramesToRender: 1500
+        overrideNumFramesToRender: 1500,
+        extraDomElementsWithEventListeners: [document.getElementById('container'), document.getElementById('cover-info')]
       };
       </script>
       <script src="inputstream.js"></script>

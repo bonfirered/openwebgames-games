@@ -240,9 +240,9 @@ function runPage() {
       codeXHR = null;
       var src = URL.createObjectURL(blob);
       var script = document.createElement('script');
-      script.src = URL.createObjectURL(blob);
+      script.src = src;
       script.onload = function() {
-//        URL.revokeObjectURL(script.src);
+        URL.revokeObjectURL(script.src);
       };
       document.body.appendChild(script);
     };

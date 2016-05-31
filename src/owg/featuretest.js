@@ -93,10 +93,21 @@ function browserFeatureTest(successCallback) {
   storeSupport('Geolocation API', navigator.geolocation);
   storeSupport('Battery Status API', navigator.getBattery);
 
-  var hwgl2 = document.createElement('canvas').getContext('webgl2', { failIfMajorPerformanceCaveat: true });
-  var swgl2 = document.createElement('canvas').getContext('webgl2');
-  var hwgl1 = document.createElement('canvas').getContext('webgl', { failIfMajorPerformanceCaveat: true }) || document.createElement('canvas').getContext('experimental-webgl', { failIfMajorPerformanceCaveat: true });
-  var swgl1 = document.createElement('canvas').getContext('webgl') || document.createElement('canvas').getContext('experimental-webgl');
+  var webGLNotSupportedReasons = {};
+  function getCanvas(typeString) {
+    var c = document.createElement('canvas');
+    c.addEventListener("webglcontextcreationerror", function(e) {
+      console.log(e.statusMessage || "Unknown error");
+      webGLNotSupportedReasons[typeString] = e.statusMessage || "Unknown error";
+    }, false);
+    return c;
+  }
+  var hwgl2 = getCanvas('hwgl2').getContext('webgl2', { failIfMajorPerformanceCaveat: true });
+  var swgl2 = getCanvas('swgl2').getContext('webgl2');
+  var hwgl1 = getCanvas('hwgl1').getContext('webgl', { failIfMajorPerformanceCaveat: true });
+  if (!hwgl1) hwgl1 = getCanvas('hwgl1').getContext('experimental-webgl', { failIfMajorPerformanceCaveat: true });
+  var swgl1 = getCanvas('swgl1').getContext('webgl');
+  if (!swgl1) swgl1 = getCanvas('swgl1').getContext('experimental-webgl');
 
   if (swgl1 && !hwgl1) storeSupport('WebGL 1 (software rasterized)', true);
   else storeSupport('WebGL 1', hwgl1);
@@ -105,6 +116,11 @@ function browserFeatureTest(successCallback) {
   else storeSupport('WebGL 2', hwgl2);
 
   var gl = hwgl2 || hwgl1 || swgl2 || swgl1;
+
+  if (!swgl1 && !webGLNotSupportedReasons['swgl1']) webGLNotSupportedReasons['swgl1'] = 'No error reason given';
+  if (!hwgl1 && !webGLNotSupportedReasons['hwgl1']) webGLNotSupportedReasons['hwgl1'] = 'No error reason given';
+  if (!swgl2 && !webGLNotSupportedReasons['swgl2']) webGLNotSupportedReasons['swgl2'] = 'No error reason given';
+  if (!hwgl2 && !webGLNotSupportedReasons['hwgl2']) webGLNotSupportedReasons['hwgl2'] = 'No error reason given';
 
   function performance_now() { return performance.now(); }
   if (!Math.fround) Math.fround = function(x) { return x; }
@@ -231,6 +247,7 @@ function browserFeatureTest(successCallback) {
     hardwareConcurrency: navigator.hardwareConcurrency, // If browser does not support this, will be asynchronously filled in by core estimator.
     singleCoreMips: singleCoreMips,
     supportsWebGL: gl ? true : false, // Denotes if any kind of WebGL is available. Specified here for conveniency to avoid needing to parse supportedApis list for the four different possible flavors of WebGL.
+    webGLNotSupportedReasons: webGLNotSupportedReasons,
     supportedApis: supportedApis,
     unsupportedApis: unsupportedApis,
     canonicalizesNansInsideAsmModule: canonicalizesNansInsideAsmModule,
