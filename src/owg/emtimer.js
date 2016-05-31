@@ -216,6 +216,10 @@ function createModule(){
 		// resize come through for those demos that need it.
 		pageNeedsResizeEvent: false,
 
+		// @todo: use normalizeMathBehavior if this stays around
+		// override math functions with normalized precision
+		injectMathFunctions: false,
+
 		// specify a fake time scale factor (e.g. how fast time advances)
 		fakeTimeScale: 1.0,
 
@@ -358,6 +362,46 @@ function unloadAllEventHandlers(){
 	try {
 		EventTarget.prototype.addEventListener = window.realAddEventListener;
 	} catch(e) {}
+
+}
+
+/**
+ * normalize math functions to return deterministic floats
+ *
+ * HURRY! WARNING!!!
+ *
+ * Wrapping the following Math functions causes the browser to lock up:
+ * cosh, exp, expm1, log, log1p, log10, log2, pow, sinh, sqrt
+ *
+ * Wrapping the following Math functions causes infinite vertical scrolling:
+ * sin, tan, tanh
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function overrideMathFunctions(){
+
+	// susceptible math functions
+	var mathFuncs = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'atan2', 'cbrt', 'cos', 'cosh', 'exp', 'expm1', 'log', 'log1p', 'log10', 'log2', 'pow', 'sin', 'sinh', 'sqrt', 'tan', 'tanh'];
+
+	for (var i in mathFuncs){
+		var realFunc = 'real_' + mathFuncs[i];
+		Math[realFunc] = Math[mathFuncs[i]];
+		switch(Math[mathFuncs[i]].length){
+			case 1:
+				Math[mathFuncs[i]] = function(a1){
+					return Math.ceil(Math[realFunc](a1) * 10000) / 10000;
+				};
+				break;
+			case 2:
+				Math[mathFuncs[i]] = function(a1, a2){
+					return Math.ceil(Math[realFunc](a1, a2) * 10000) / 10000;
+				};
+				break;
+			default:
+				throw new Error('Failed to hook into Math!');
+		}
+	}
 
 }
 
@@ -1492,6 +1536,11 @@ function initializeTestSuite(){
 
 	// normalize Math.random() to be deterministic
 	normalizeRandomBehavior();
+
+	// normalize Math functions to be deterministic (for select games)
+	if (Module.injectMathFunctions && (recordingInputStream || injectingInputStream)){
+		overrideMathFunctions();
+	}
 
 	// we hijack this later, so before we do that make a reference to the original instance
 	window.realXMLHttpRequest = XMLHttpRequest;
