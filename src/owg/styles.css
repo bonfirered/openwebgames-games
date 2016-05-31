@@ -1,0 +1,19 @@
+// Temporary styles to make the games function properly with an iframe.
+// Need to determine the requirements here and then restructure
+// each game to follow these guidelines.
+
+html, body {
+	background: transparent;
+}
+html, body, div {
+	height: 100%;
+	width: 100%;
+	text-align: center;
+}
+canvas {
+  width: auto !important;
+  height: 100% !important;
+  position: static !important;
+  border: none !important;
+  display: inline-block !important;
+}
