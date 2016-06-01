@@ -226,7 +226,10 @@ function createModule(){
 		referenceTestTick: referenceTestTick,
 
 		// trigger when emscripten main() has been called
-		onRuntimeInitialized: initializeRuntime
+		onRuntimeInitialized: initializeRuntime,
+
+		// forces the canvas to inherit the iframes width and height
+		inheritsIframeSize: false
 
 	};
 
@@ -1390,6 +1393,25 @@ function referenceTestTick(){
 }
 
 /**
+ * force the canvas to inherit iframes width and height
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function inheritIframeSize(){
+	if (isInsideIframe() && Module.inheritsIframeSize){
+		window.onmessage = function(e){
+			switch(e.data.msg){
+				case 'iframeSize':
+					Module.canvas.style.width = e.data.width;
+					Module.canvas.style.height = e.data.height;
+					break;
+			}
+		};
+	}
+}
+
+/**
  * initialize emscripten runtime
  *
  * @depends window.fakedTime
@@ -1771,6 +1793,9 @@ function initializeTestSuite(){
 			output.style = 'display:none';
 		}
 	}
+
+	// inherit iframe size
+	inheritIframeSize();
 
 	// Page load starts now.
 	window.pageStartupT0 = performance.realNow();

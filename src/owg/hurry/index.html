@@ -23,6 +23,7 @@
         text-align: center;
         display: none;
       }
+	  /*
       #main {
         -webkit-box-shadow: 0 0 30px -12px #fff;
            -moz-box-shadow: 0 0 30px -12px #fff;
@@ -31,20 +32,22 @@
                 box-shadow: 0 0 30px -12px #fff;
         width: 1117px;
         height: 768px;
-        position: absolute;
+		position: absolute;
       }
+	  */
     </style>
     <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 <!--    <a href="https://github.com/hughsk/ludum-dare-27"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a> -->
     <div id="highscore">best score: <span id="score">0</span></div>
-    <canvas id="main"></canvas>
+	<canvas id="main" width="1117" height="768"></canvas>
     <script>
       var Module = {
         key: 'hurry',
         canvas: document.getElementById('main'),
-        pageNeedsResizeEvent: true
+        pageNeedsResizeEvent: true,
+		inheritsIframeSize: true
       };
     </script>
     <script src="../emtimer.js"></script>
@@ -61,9 +64,12 @@
         Module['onRuntimeInitialized']();
         setTimeout(function() {
           console.log('hack: forcing relayout of the DOM to work around Chrome bug where 2D canvas does not show up correctly.');
-          Module['canvas'].style.position = 'fixed'; // Was 'static' (default) before setting this, but the page doesn't really care which.
+		  Module.canvas.style.display = 'inline-block';
+		  Module.canvas.style.display = 'auto';
+          //Module['canvas'].style.position = 'fixed'; // Was 'static' (default) before setting this, but the page doesn't really care which.
         }, 4000);
       }
+
       document.body.appendChild(s);
     }
     window.onload = function() {
@@ -72,6 +78,7 @@
         cpuprofiler_add_hooks();
       }
     }
+
     </script>
     <script src='inputstream.js'></script>
 
