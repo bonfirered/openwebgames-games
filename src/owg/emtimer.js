@@ -1403,8 +1403,18 @@ function inheritIframeSize(){
 		window.onmessage = function(e){
 			switch(e.data.msg){
 				case 'iframeSize':
-					Module.canvas.style.width = e.data.width;
-					Module.canvas.style.height = e.data.height;
+					
+					// @TODO: Without a timeout, this wasn't catching.
+					// Need to rework to avoid this hack.
+					setTimeout(function() {
+
+						// @TODO: The previous way the attributes were being
+						// added didn't work for me. This works.
+						Module.canvas.setAttribute('width', e.data.width);
+						Module.canvas.setAttribute('height', e.data.height);
+
+					}, 500);
+					
 					break;
 			}
 		};
