@@ -54,7 +54,7 @@
       });
 */
     }
-		
+
 		$(function() {
 			ResizeCanvas();
 			$(window).resize(function() {
@@ -69,7 +69,7 @@
 	<div class="gameView" id="logo"></div>
 	<canvas class="gameView" id="canvas" oncontextmenu="event.preventDefault()" width=1366 height=768 style='width:1366px; height:768px;'></canvas>
 	<audio id="_WebGLMusicStreaming"></audio>
-		
+
 	<script type='text/javascript'>
 
   function clearIDBFS() {
@@ -117,7 +117,7 @@
     canvas: document.getElementById('canvas'),
     progress: null,
     setStatus: function(text) {
-      if (this.progress == null) 
+      if (this.progress == null)
       {
         if (typeof UnityProgress != 'function')
           return;
@@ -129,7 +129,7 @@
       var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
       if (m)
         this.progress.SetProgress (parseInt(m[2])/parseInt(m[4]));
-      if (text === "") 
+      if (text === "")
         this.progress.Clear()
     },
     totalDependencies: 0,
@@ -218,7 +218,7 @@ function runPage() {
     codeXHR.open('GET', Module.locateFile('Release/HoPWebGL_Mozilla.js'), true);
     codeXHR.onload = function() {
       var code = codeXHR.responseText;
-      if (!Math.fround) { 
+      if (!Math.fround) {
   try {
     console.log('optimizing out Math.fround calls');
     var m = /var ([^=]+)=global\.Math\.fround;/.exec(code);
@@ -255,5 +255,6 @@ function runPage() {
 window.addEventListener("message", function(e) { if (e.data == 'preloadXHRsfinished') runPage(); }, false);
 
 </script>
+	<div id="owg-events" onclick="delete this" style="width:100%;height:100%; position:absolute;top:0;left:0;"></div>
 </body>
 </html>
