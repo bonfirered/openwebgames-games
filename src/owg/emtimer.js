@@ -1393,6 +1393,22 @@ function referenceTestTick(){
 }
 
 /**
+ * report the canvas width and height to the parent window
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function inheritCanvasSize(){
+	if (isInsideIframe()){
+		top.postMessage({
+			msg		: 'inheritCanvasSize',
+			width	: Module.canvas.getAttribute('width'),
+			height	: Module.canvas.getAttribute('height')
+		}, '*');
+	}
+}
+
+/**
  * force the canvas to inherit iframes width and height
  *
  * @param {Void}
@@ -1403,7 +1419,7 @@ function inheritIframeSize(){
 		window.onmessage = function(e){
 			switch(e.data.msg){
 				case 'iframeSize':
-					
+
 					// @TODO: Without a timeout, this wasn't catching.
 					// Need to rework to avoid this hack.
 					setTimeout(function() {
@@ -1414,7 +1430,7 @@ function inheritIframeSize(){
 						Module.canvas.setAttribute('height', e.data.height);
 
 					}, 500);
-					
+
 					break;
 			}
 		};
@@ -1806,6 +1822,9 @@ function initializeTestSuite(){
 
 	// inherit iframe size
 	inheritIframeSize();
+
+	// inherit canvas size
+	inheritCanvasSize();
 
 	// Page load starts now.
 	window.pageStartupT0 = performance.realNow();
