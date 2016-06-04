@@ -24,31 +24,18 @@
         text-align: center;
         display: none;
       }
-	  /*
-      #main {
-        -webkit-box-shadow: 0 0 30px -12px #fff;
-           -moz-box-shadow: 0 0 30px -12px #fff;
-            -ms-box-shadow: 0 0 30px -12px #fff;
-             -o-box-shadow: 0 0 30px -12px #fff;
-                box-shadow: 0 0 30px -12px #fff;
-        width: 1117px;
-        height: 768px;
-		position: absolute;
-      }
-	  */
     </style>
     <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 <!--    <a href="https://github.com/hughsk/ludum-dare-27"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a> -->
     <div id="highscore">best score: <span id="score">0</span></div>
-	<canvas id="main" width="1117" height="768"></canvas>
+	<canvas id="main" width="800" height="550"></canvas>
     <script>
       var Module = {
         key: 'hurry',
         canvas: document.getElementById('main'),
-        pageNeedsResizeEvent: true,
-		inheritsIframeSize: true
+        pageNeedsResizeEvent: true
       };
     </script>
     <script src="../emtimer.js"></script>
