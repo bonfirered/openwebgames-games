@@ -14,7 +14,7 @@
   </head>
   <body class="template">
     <p class="header"><span>Ski Safari</span></p>
-    <div class="template-wrap">
+    <div class="template-wrap owg-container">
       <canvas class="emscripten" id="canvas" width="1366" height="768" oncontextmenu="event.preventDefault()"></canvas>
     </div>
 
@@ -42,7 +42,7 @@
     dataUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.datagz",
     codeUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.jsgz",
     memUrl: "Release/2016_05_02_webgl_unity_5_3_2_p1_4.memgz",
-    canvas: document.getElementById('canvas')
+	canvas: document.getElementById('canvas')
   };
   top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
 </script>
