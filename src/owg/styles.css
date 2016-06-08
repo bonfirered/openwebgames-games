@@ -1,0 +1,24 @@
+/* Temporary styles to make the games function properly with an iframe. */
+/* Need to determine the requirements here and then restructure */
+/* each game to follow these guidelines. */
+
+/* Resets */
+html, body, .owg-container {
+	height: 100%;
+	width: 100%;
+	text-align: center;
+	background: none !important;
+	background-color: transparent !important;
+}
+canvas {
+  width: auto !important;
+  height: 100% !important;
+  position: static !important;
+  border: none !important;
+  display: inline-block !important;
+}
+
+/* Set it to black */
+html {
+	background-color: #000 !important;
+}
