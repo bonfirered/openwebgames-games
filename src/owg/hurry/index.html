@@ -8,6 +8,7 @@
         padding: 0;
         margin: 0;
         background: #222;
+		overflow: hidden;
       }
       #highscore {
         position: absolute;
@@ -23,22 +24,13 @@
         text-align: center;
         display: none;
       }
-      #main {
-        -webkit-box-shadow: 0 0 30px -12px #fff;
-           -moz-box-shadow: 0 0 30px -12px #fff;
-            -ms-box-shadow: 0 0 30px -12px #fff;
-             -o-box-shadow: 0 0 30px -12px #fff;
-                box-shadow: 0 0 30px -12px #fff;
-        width: 1117px;
-        height: 768px;
-        position: absolute;
-      }
     </style>
+    <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 <!--    <a href="https://github.com/hughsk/ludum-dare-27"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a> -->
     <div id="highscore">best score: <span id="score">0</span></div>
-    <canvas id="main"></canvas>
+	<canvas id="main" width="800" height="550"></canvas>
     <script>
       var Module = {
         key: 'hurry',
@@ -60,9 +52,12 @@
         Module['onRuntimeInitialized']();
         setTimeout(function() {
           console.log('hack: forcing relayout of the DOM to work around Chrome bug where 2D canvas does not show up correctly.');
-          Module['canvas'].style.position = 'fixed'; // Was 'static' (default) before setting this, but the page doesn't really care which.
+		  Module.canvas.style.display = 'inline-block';
+		  Module.canvas.style.display = 'auto';
+          //Module['canvas'].style.position = 'fixed'; // Was 'static' (default) before setting this, but the page doesn't really care which.
         }, 4000);
       }
+
       document.body.appendChild(s);
     }
     window.onload = function() {
@@ -71,8 +66,60 @@
         cpuprofiler_add_hooks();
       }
     }
+
     </script>
     <script src='inputstream.js'></script>
 
+	<script>
+
+		/**
+		 * The Hurry! demo uses custom event wrapper logic that is preventing,
+		 * awsd keys, arrow keys, and the space bar from being captured inside
+		 * an iframe. To see that this is restricted to the Hurry! demo comment
+		 * out bundle.js up above, set this debugging flag to true, and open
+		 * your console log. You will see that all of these event captures do
+		 * in fact work inside an iframe on top of a canvas element.
+		 *
+		 * If you have the original Hurry! source code please take this example
+		 * and apply the necessary fixes and re-publish bundle.js.
+		 *
+		 * Thanks!
+		 * @Tobius
+		 */
+		var debugging = false;
+		if (debugging){
+			document.onkeydown = function(e){
+				var event = e || window.event;
+				var direction = null;
+				switch(event.keyCode){
+					case 37:
+					case 65:
+						direction = 'left';
+						break;
+					case 32:
+					case 38:
+					case 87:
+						direction = 'up';
+						break;
+					case 39:
+					case 68:
+						direction = 'right';
+						break;
+					case 40:
+					case 83:
+						direction = 'down';
+						break;
+					default:
+						console.log(event.keyCode);
+						return;
+				}
+				if (direction){
+					console.log(direction);
+					event.preventDefault();
+				}
+			};
+		}
+
+	</script>
 </body>
 </html>

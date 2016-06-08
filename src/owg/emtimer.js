@@ -226,7 +226,10 @@ function createModule(){
 		referenceTestTick: referenceTestTick,
 
 		// trigger when emscripten main() has been called
-		onRuntimeInitialized: initializeRuntime
+		onRuntimeInitialized: initializeRuntime,
+
+		// forces the canvas to inherit the iframes width and height
+		inheritsIframeSize: false
 
 	};
 
@@ -1390,6 +1393,51 @@ function referenceTestTick(){
 }
 
 /**
+ * report the canvas width and height to the parent window
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function inheritCanvasSize(){
+	if (isInsideIframe()){
+		top.postMessage({
+			msg		: 'inheritCanvasSize',
+			width	: Module.canvas.getAttribute('width'),
+			height	: Module.canvas.getAttribute('height')
+		}, '*');
+	}
+}
+
+/**
+ * force the canvas to inherit iframes width and height
+ *
+ * @param {Void}
+ * @return {Void}
+ */
+function inheritIframeSize(){
+	if (isInsideIframe() && Module.inheritsIframeSize){
+		window.onmessage = function(e){
+			switch(e.data.msg){
+				case 'iframeSize':
+
+					// @TODO: Without a timeout, this wasn't catching.
+					// Need to rework to avoid this hack.
+					setTimeout(function() {
+
+						// @TODO: The previous way the attributes were being
+						// added didn't work for me. This works.
+						Module.canvas.setAttribute('width', e.data.width);
+						Module.canvas.setAttribute('height', e.data.height);
+
+					}, 500);
+
+					break;
+			}
+		};
+	}
+}
+
+/**
  * initialize emscripten runtime
  *
  * @depends window.fakedTime
@@ -1771,6 +1819,12 @@ function initializeTestSuite(){
 			output.style = 'display:none';
 		}
 	}
+
+	// inherit iframe size
+	inheritIframeSize();
+
+	// inherit canvas size
+	inheritCanvasSize();
 
 	// Page load starts now.
 	window.pageStartupT0 = performance.realNow();
