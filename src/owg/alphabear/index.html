@@ -8,13 +8,13 @@
 	<script type="text/javascript" src="TemplateData/tweenjs-0.6.0.min.js"></script>
 	<script type="text/javascript" src="TemplateData/CSSPlugin.js"></script>
 	<script type="text/javascript" src="TemplateData/jquery-1.7.1.min.js"></script>
-	
+
 	<link rel="stylesheet"    href="TemplateData/style.css">
   <link rel="stylesheet" href="../styles.css">
     <link rel="shortcut icon" href="TemplateData/favicon.ico" />
-	
+
   </head>
-  
+
   <body>
     <div id="loadingBox">
       <p   id="puns"></p>
@@ -27,10 +27,12 @@
       <div id="progressBar"></div>
       <p   id="loadingInfo">DOWNLOADING....</p>
     </div>
-	
+
     <script type="text/javascript" src="TemplateData/UnityProgress.js"></script>
-	
-    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" height="768" width="1366"></canvas>
+
+	<div class="owg-container">
+		<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" height="768" width="1366"></canvas>
+	</div>
     <script src="../cpuprofiler.js"></script>
     <script type='text/javascript'>
   var Module = {
@@ -52,7 +54,7 @@
     canvas: document.getElementById('canvas'),
   };
   top.postMessage({ msg: 'preloadGame', key: Module.key }, '*');
-  
+
 </script>
 <script src="../emtimer.js"></script>
 <script src="inputstream.js"></script>
