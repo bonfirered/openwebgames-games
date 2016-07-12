@@ -109,6 +109,12 @@ function postPreloadGameProgress(progress){
  */
 function onGameError(msg, url, line, column, err){
 
+	// this is a known bug, ignore for now
+	// https://bugzilla.mozilla.org/show_bug.cgi?id=944918
+	if (msg === 'UnknownError'){
+		return;
+	}
+
 	var testResults = {
 		result: 'ERROR',
 		error: msg
