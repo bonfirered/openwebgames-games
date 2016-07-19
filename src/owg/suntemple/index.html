@@ -565,5 +565,12 @@ preInitEmscripten();
 </script>
 <script src="../emtimer.js"></script>
 
+<script>
+  // If running interactively, ask parent iframe to give keyboard focus to canvas when it is clicked.
+  if (location.search.indexOf('playback') == -1) {
+    Module['canvas'].addEventListener("click", function(e) { parent.postMessage({msg: "askKeyboardFocus"}, "*"); }, true);
+  }
+</script>
+
 </body>
 </html>
