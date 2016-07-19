@@ -70,56 +70,11 @@
     </script>
     <script src='inputstream.js'></script>
 
-	<script>
-
-		/**
-		 * The Hurry! demo uses custom event wrapper logic that is preventing,
-		 * awsd keys, arrow keys, and the space bar from being captured inside
-		 * an iframe. To see that this is restricted to the Hurry! demo comment
-		 * out bundle.js up above, set this debugging flag to true, and open
-		 * your console log. You will see that all of these event captures do
-		 * in fact work inside an iframe on top of a canvas element.
-		 *
-		 * If you have the original Hurry! source code please take this example
-		 * and apply the necessary fixes and re-publish bundle.js.
-		 *
-		 * Thanks!
-		 * @Tobius
-		 */
-		var debugging = false;
-		if (debugging){
-			document.onkeydown = function(e){
-				var event = e || window.event;
-				var direction = null;
-				switch(event.keyCode){
-					case 37:
-					case 65:
-						direction = 'left';
-						break;
-					case 32:
-					case 38:
-					case 87:
-						direction = 'up';
-						break;
-					case 39:
-					case 68:
-						direction = 'right';
-						break;
-					case 40:
-					case 83:
-						direction = 'down';
-						break;
-					default:
-						console.log(event.keyCode);
-						return;
-				}
-				if (direction){
-					console.log(direction);
-					event.preventDefault();
-				}
-			};
-		}
-
-	</script>
+    <script>
+      // If running interactively, ask parent iframe to give keyboard focus to canvas when it is clicked.
+      if (location.search.indexOf('playback') == -1) {
+        Module['canvas'].addEventListener("click", function(e) { parent.postMessage({msg: "askKeyboardFocus"}, "*"); }, true);
+      }
+    </script>
 </body>
 </html>
