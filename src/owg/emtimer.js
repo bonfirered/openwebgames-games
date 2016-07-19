@@ -932,64 +932,74 @@ function doReferenceTest(){
 		var wrong = Infinity;
 		var testResult = 'FAIL';
 
-		try {
-			var img = Module.referenceImage;
-			var div = document.createElement('div');
+		if (Module.referenceImage && Module.referenceImageData) {
+			try {
+				var img = Module.referenceImage;
+				var div = document.createElement('div');
 
-			var actualCanvas = document.createElement('canvas');
-			actualCanvas.width = actualImage.width;
-			actualCanvas.height = actualImage.height;
+				var actualCanvas = document.createElement('canvas');
+				actualCanvas.width = actualImage.width;
+				actualCanvas.height = actualImage.height;
 
-			var actualCtx = actualCanvas.getContext('2d');
-			actualCtx.drawImage(actualImage, 0, 0);
+				var actualCtx = actualCanvas.getContext('2d');
+				actualCtx.drawImage(actualImage, 0, 0);
 
-			var actual = actualCtx.getImageData(0, 0, actualImage.width, actualImage.height).data;
+				var actual = actualCtx.getImageData(0, 0, actualImage.width, actualImage.height).data;
 
-			var total = 0;
-			var width = img.width;
-			var height = img.height;
-			var expected = Module.referenceImageData;
+				var total = 0;
+				var width = img.width;
+				var height = img.height;
+				var expected = Module.referenceImageData;
 
-			// Compute per-pixel error diff.
-			for (var x = 0; x < width; x++){
-				for (var y = 0; y < height; y++){
-					total += Math.abs(expected[y*width*4 + x*4 + 0] - actual[y*width*4 + x*4 + 0]);
-					total += Math.abs(expected[y*width*4 + x*4 + 1] - actual[y*width*4 + x*4 + 1]);
-					total += Math.abs(expected[y*width*4 + x*4 + 2] - actual[y*width*4 + x*4 + 2]);
+				// Compute per-pixel error diff. The reftest images are limited to a specific resolution,
+				// so only perform the test if the render resolution matched.
+				if (width == actualImage.width && height == actualImage.height) {
+					for (var x = 0; x < width; x++){
+						for (var y = 0; y < height; y++){
+							total += Math.abs(expected[y*width*4 + x*4 + 0] - actual[y*width*4 + x*4 + 0]);
+							total += Math.abs(expected[y*width*4 + x*4 + 1] - actual[y*width*4 + x*4 + 1]);
+							total += Math.abs(expected[y*width*4 + x*4 + 2] - actual[y*width*4 + x*4 + 2]);
+						}
+					}
+				} else {
+					console.log('reference image was authored in size (' + width + 'x' + height + '), but rendered in size (' + actualImage.width + 'x' + actualImage.height + '), so skipping per-pixel reftest.');
 				}
-			}
 
-			// Hide all other elements on the page, only show the expected and observed rendered images.
-			/* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
-			var cn = document.body.childNodes;
-			for(var i = 0; i < cn.length; ++i){
-				if (cn[i] && cn[i].style) cn[i].style.display = 'none';
-			}
-			*/
-
-			wrong = Math.floor(total / (img.width*img.height*3)); // floor, to allow some margin of error for antialiasing
-
-			if (wrong < 1000){ // Allow a bit of leeway.
-				testResult = 'PASS';
+				// Hide all other elements on the page, only show the expected and observed rendered images.
 				/* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
-				div.innerHTML = 'TEST PASSED. Timescore: ' + duration.toFixed(2) + '. (lower is better)';
-				div.style.color = 'green';
-				document.body.appendChild(div);
-				document.body.appendChild(actualImage); // to grab it for creating the test reference
+				var cn = document.body.childNodes;
+				for(var i = 0; i < cn.length; ++i){
+					if (cn[i] && cn[i].style) cn[i].style.display = 'none';
+				}
 				*/
-			} else {
-				testResult = 'FAIL';
-				/* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
-				document.body.appendChild(img); // for comparisons
-				div.innerHTML = 'TEST FAILED! The expected and actual images differ on average by ' + wrong + ' units/pixel. ^=expected, v=actual. Timescore: ' + duration.toFixed(3) + '. (lower is better)';
-				div.style.color = 'red';
-				document.body.appendChild(div);
-				document.body.appendChild(actualImage); // to grab it for creating the test reference
-				*/
-			}
 
-		} catch(e) {
-			console.error(e);
+				wrong = Math.floor(total / (img.width*img.height*3)); // floor, to allow some margin of error for antialiasing
+
+				if (wrong < 1000){ // Allow a bit of leeway.
+					testResult = 'PASS';
+					/* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
+					div.innerHTML = 'TEST PASSED. Timescore: ' + duration.toFixed(2) + '. (lower is better)';
+					div.style.color = 'green';
+					document.body.appendChild(div);
+					document.body.appendChild(actualImage); // to grab it for creating the test reference
+					*/
+				} else {
+					testResult = 'FAIL';
+					/* **Disabled: we don't want to change the visual presentation of the child iframe after the test **
+					document.body.appendChild(img); // for comparisons
+					div.innerHTML = 'TEST FAILED! The expected and actual images differ on average by ' + wrong + ' units/pixel. ^=expected, v=actual. Timescore: ' + duration.toFixed(3) + '. (lower is better)';
+					div.style.color = 'red';
+					document.body.appendChild(div);
+					document.body.appendChild(actualImage); // to grab it for creating the test reference
+					*/
+				}
+
+			} catch(e) {
+				console.error(e);
+			}
+		} else {
+			// There's no reftest data for this test, so automatically mark as pass.
+			testResult = 'PASS';
 		}
 
 		var testResults = {
