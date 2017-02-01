@@ -36,7 +36,7 @@ There are three possible targets, please use them wisely.
 
 target	| s3 url
 ---		| ---
-dev		| https://s3.amazonaws.com/owg-dev/
-stage	| https://s3.amazonaws.com/owg-stage/
-prod	| https://s3.amazonaws.com/owg/
+dev		| https://s3.amazonaws.com/net-mozaws-dev-openwebgames-dev/
+stage	| https://s3.amazonaws.com/net-mozaws-stage-openwebgames-stage/
+prod	| https://s3.amazonaws.com/net-mozaws-prod-openwebgames-prod/
 
