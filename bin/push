@@ -9,17 +9,17 @@ var bucket = null;
 if (target === 'dev' || target === 'development'){
 
 	// dev push
-	bucket = 'owg-dev';
+	bucket = 'net-mozaws-dev-openwebgames-dev';
 	
 } else if (target === 'stage'){
 
 	// stage push
-	bucket = 'owg-stage';
+	bucket = 'net-mozaws-stage-openwebgames-stage';
 
 } else if (target === 'prod' || target === 'production'){
 
 	// production push
-	bucket = 'owg';
+	bucket = 'net-mozaws-prod-openwebgames-prod';
 
 }
 
@@ -115,7 +115,7 @@ recursive(base, function(err, files){
 	// run all commands
 	var count = 0;
 	async.eachSeries(cmds, function(cmd, cb){
-		exec('cd ' + base + ' && ' + cmd, function(err, stdout, stderr){
+		exec('cd ' + base + ' && ' + cmd, {maxBuffer: 1024 * 500}, function(err, stdout, stderr){
 			count++;
 			if (!!err){
 				return cb([cmd, err]);
